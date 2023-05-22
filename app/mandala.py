@@ -189,7 +189,7 @@ def process_screen(mandala_screen):
         # spotted_strings = []
         # text = pytesseract.image_to_string(filtered_img, lang='eng', config=config)
         # lines = text.split('\n')
-        # for line in lines:
+        # for line in lines
         #     print(line)
         #     if lines and ' ' in lines[0]:
         #         print(lines)
