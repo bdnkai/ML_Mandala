@@ -1,9 +1,10 @@
 import cv2 as cv
 import numpy as np
 import pytesseract
-from windowcapture import WindowCapture
 import matplotlib.pyplot as plt
+import dxcam
 import gym
+from windowcapture import WindowCapture
 
 # env = gym.make(environment_name)
 # custom data structure to hold the state of an HSV filter
@@ -44,6 +45,7 @@ def init_control_gui():
     # cv.createTrackbar('HMax', TRACKBAR_WINDOW, 0, 179, nothing)
     # cv.createTrackbar('SMax', TRACKBAR_WINDOW, 0, 255, nothing)
     # cv.createTrackbar('VMax', TRACKBAR_WINDOW, 0, 255, nothing)
+    #
     # # Set default value for Max HSV trackbars
     # cv.setTrackbarPos('HMax', TRACKBAR_WINDOW, 179)
     # cv.setTrackbarPos('SMax', TRACKBAR_WINDOW, 255)
@@ -146,20 +148,32 @@ def shift_channel(c, amount):
 
 def process_screen(mandala_screen):
 
-    # Call init_control_gui to show the trackbars
+
     init_control_gui()
 
-    config = '-c char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789% --oem 3'
 
 
-    rois = []
-    while True:
+    # rois = []
+    left, top = 0, 0
+    right, bottom = 1, 1
+    region = (left, top, right, bottom)
+
+
+    camera = dxcam.create(output_idx=0, output_color="BGR")
+
+
+    print(f'camera is start: {camera.is_capturing}')
+
+    for i in range(100000):
         wincap = WindowCapture(mandala_screen)
-        img = wincap.get_screenshot()
-        screenshot = wincap.get_screenshot()
+        new_region = (left, top, wincap.w, wincap.h)
+        new_camera = camera.start(region=new_region)
+        image = camera.get_latest_frame()  # Will block until new frame available
+        img = image
 
         orig_height, orig_width = img.shape[:2]
-        fixed_width = 1600
+        fixed_width = 1000
+
         ratio = fixed_width / float(orig_width)
         fixed_height = int(orig_height * ratio)
         img = cv.resize(img, (fixed_width, fixed_height))
@@ -170,46 +184,56 @@ def process_screen(mandala_screen):
         gray = cv.cvtColor(filtered_img, cv.COLOR_BGR2GRAY)
         thresh = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
 
-        circles = cv.HoughCircles(thresh, cv.HOUGH_GRADIENT, 1, 18, param1=20, param2=14, minRadius=6, maxRadius=22)
+        circles = cv.HoughCircles(thresh, cv.HOUGH_GRADIENT, 1, 20, param1=15, param2=16, minRadius=10, maxRadius=30)
 
         if circles is not None:
             # Convert the (x, y) coordinates and radius of the circles to integers
             circles = np.round(circles[0, :]).astype("int")
 
             # Loop over the detected circles and draw them
-            for (x, y, r) in circles:
-                cv.circle(img, (x, y), r, (100, 255, 100), 3)
+        for (x, y, r) in circles:
+            cv.circle(img, (x, y), r, (100, 255, 100), 2)
 
 
-            print(int(len(circles)))
-            plt.imshow(cv.cvtColor(gray, cv.COLOR_BGR2RGB))
+        # print(int(len(circles)))
+            # plt.imshow(cv.cvtColor(gray, cv.COLOR_BGR2RGB))
             # plt.show()
 
-
-        # spotted_strings = []
-        # text = pytesseract.image_to_string(filtered_img, lang='eng', config=config)
-        # lines = text.split('\n')
-        # for line in lines
-        #     print(line)
-        #     if lines and ' ' in lines[0]:
-        #         print(lines)
-
-
-                #Create a feature vector
-                # feature_vector = [core_spot_points_fraction, activation_chance_decimal]
-
-        # Feed the feature vector to your model
-        # (You'll need to replace this with your actual model code)
-        # model_output = model.predict(feature_vector)
-        # print (model_output)q
-        # return model_output
-
+        if camera:
+            camera.stop()
+        if new_camera:
+            new_camera.stop()
+            camera.start()
 
         cv.imshow('img', img)
+        cv.waitKey(5)
+        if cv.waitKey(5) & 0xFF == ord('q'):
+            camera.stop()
+    # config = '-c char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789% --oem 3'
+    # spotted_strings = []
+    # text = pytesseract.image_to_string(filtered_img, lang='eng', config=config)
+    # lines = text.split('\n')
+    # for line in lines
+    #     print(line)
+    #     if lines and ' ' in lines[0]:
+    #         print(lines)
 
-        # Break the loop if 'q' key is pressed
-        if cv.waitKey(1) & 0xFF == ord('q'):
-            break
+
+            #Create a feature vector
+            # feature_vector = [core_spot_points_fraction, activation_chance_decimal]
+
+    # Feed the feature vector to your model
+    # (You'll need to replace this with your actual model code)
+    # model_output = model.predict(feature_vector)
+    # print (model_output)q
+    # return model_output
+
+
+    # cv.imshow('img', img)
+    #
+    # # Break the loop if 'q' key is pressed
+    # if cv.waitKey(1) & 0xFF == ord('q'):
+    #     break
 
 
 
