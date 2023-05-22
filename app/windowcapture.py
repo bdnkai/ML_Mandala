@@ -27,7 +27,7 @@ class WindowCapture:
 
         # account for the window border and titlebar and cut them off
         border_pixels = 0
-        titlebar_pixels = 52
+        titlebar_pixels = 155
         self.w = self.w - (border_pixels * 2)
         self.h = self.h - titlebar_pixels - border_pixels
         self.cropped_x = border_pixels
@@ -87,4 +87,5 @@ class WindowCapture:
                 print(hex(hwnd), win32gui.GetWindowText(hwnd))
 
         win32gui.EnumWindows(winEnumHandler, None)
-
+    list_window_names(hwnd)
+#

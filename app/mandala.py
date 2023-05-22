@@ -1,10 +1,11 @@
 import cv2 as cv
 import numpy as np
 import pytesseract
-import requests
 from windowcapture import WindowCapture
+import matplotlib.pyplot as plt
+import gym
 
-
+# env = gym.make(environment_name)
 # custom data structure to hold the state of an HSV filter
 
 class HsvFilter:
@@ -58,8 +59,9 @@ def init_control_gui():
 # returns an HSV filter object based on the control GUI values
 def get_hsv_filter_from_controls():
 
-    # Get current positions of all trackbars
     hsv_filter = HsvFilter()
+
+    # Get current positions of all trackbars
     # hsv_filter.hMin = cv.getTrackbarPos('HMin', TRACKBAR_WINDOW)
     # hsv_filter.sMin = cv.getTrackbarPos('SMin', TRACKBAR_WINDOW)
     # hsv_filter.vMin = cv.getTrackbarPos('VMin', TRACKBAR_WINDOW)
@@ -70,18 +72,30 @@ def get_hsv_filter_from_controls():
     # hsv_filter.sSub = cv.getTrackbarPos('SSub', TRACKBAR_WINDOW)
     # hsv_filter.vAdd = cv.getTrackbarPos('VAdd', TRACKBAR_WINDOW)
     # hsv_filter.vSub = cv.getTrackbarPos('VSub', TRACKBAR_WINDOW)
-
+    #
 
     # text filter
+    # hsv_filter.hMin = 0
+    # hsv_filter.sMin = 0
+    # hsv_filter.vMin = 133
+    # hsv_filter.hMax = 180
+    # hsv_filter.sMax = 255
+    # hsv_filter.vMax = 255
+    # hsv_filter.sAdd = 0
+    # hsv_filter.sSub = 255
+    # hsv_filter.vAdd = 34
+    # hsv_filter.vSub = 0
+
+    # circle filtering
     hsv_filter.hMin = 0
-    hsv_filter.sMin = 0
-    hsv_filter.vMin = 133
-    hsv_filter.hMax = 180
+    hsv_filter.sMin = 58
+    hsv_filter.vMin = 0
+    hsv_filter.hMax = 115
     hsv_filter.sMax = 255
     hsv_filter.vMax = 255
     hsv_filter.sAdd = 0
-    hsv_filter.sSub = 255
-    hsv_filter.vAdd = 34
+    hsv_filter.sSub = 0
+    hsv_filter.vAdd = 0
     hsv_filter.vSub = 0
 
 
@@ -138,9 +152,17 @@ def process_screen(mandala_screen):
     config = '-c char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789% --oem 3'
 
 
+    rois = []
     while True:
         wincap = WindowCapture(mandala_screen)
         img = wincap.get_screenshot()
+        screenshot = wincap.get_screenshot()
+
+        orig_height, orig_width = img.shape[:2]
+        fixed_width = 1600
+        ratio = fixed_width / float(orig_width)
+        fixed_height = int(orig_height * ratio)
+        img = cv.resize(img, (fixed_width, fixed_height))
 
         hsv_filter = get_hsv_filter_from_controls()
         filtered_img = apply_hsv_filter(img, hsv_filter=hsv_filter)
@@ -148,35 +170,42 @@ def process_screen(mandala_screen):
         gray = cv.cvtColor(filtered_img, cv.COLOR_BGR2GRAY)
         thresh = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
 
+        circles = cv.HoughCircles(thresh, cv.HOUGH_GRADIENT, 1, 18, param1=20, param2=14, minRadius=6, maxRadius=22)
+
+        if circles is not None:
+            # Convert the (x, y) coordinates and radius of the circles to integers
+            circles = np.round(circles[0, :]).astype("int")
+
+            # Loop over the detected circles and draw them
+            for (x, y, r) in circles:
+                cv.circle(img, (x, y), r, (100, 255, 100), 3)
+
+
+            print(int(len(circles)))
+            plt.imshow(cv.cvtColor(gray, cv.COLOR_BGR2RGB))
+            # plt.show()
+
+
+        # spotted_strings = []
         # text = pytesseract.image_to_string(filtered_img, lang='eng', config=config)
+        # lines = text.split('\n')
+        # for line in lines:
+        #     print(line)
+        #     if lines and ' ' in lines[0]:
+        #         print(lines)
 
-        spotted_strings = []
-        text = pytesseract.image_to_string(thresh, lang='eng', config=config)
-        lines = text.split('\n')
-        for line in lines:
-            if('Core Sector 1' or 'Core Sector 2' or 'Core Sector 3'):
-                spotted_strings.append(string)
-                # Parse the text
-                core_spot_points = int(lines[0].split(' ')[3].split('/')[0])
-                total_core_spot_points = int(lines[0].split(' ')[3].split('/')[1])
-                activation_chance = int(lines[1].split(' ')[2].replace('%', ''))
-
-                # Convert the parsed values to numbers
-                core_spot_points_fraction = core_spot_points / total_core_spot_points
-                activation_chance_decimal = activation_chance / 100
 
                 #Create a feature vector
-                feature_vector = [core_spot_points_fraction, activation_chance_decimal]
+                # feature_vector = [core_spot_points_fraction, activation_chance_decimal]
 
-            # Feed the feature vector to your model
-            # (You'll need to replace this with your actual model code)
-        model_output = model.predict(feature_vector)
-        print (model_output)
-        return model_output
+        # Feed the feature vector to your model
+        # (You'll need to replace this with your actual model code)
+        # model_output = model.predict(feature_vector)
+        # print (model_output)q
+        # return model_output
 
 
-
-        cv.imshow('img', filtered_img)
+        cv.imshow('img', img)
 
         # Break the loop if 'q' key is pressed
         if cv.waitKey(1) & 0xFF == ord('q'):
