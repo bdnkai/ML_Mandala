@@ -9,6 +9,8 @@ from windowcapture import WindowCapture
 # env = gym.make(environment_name)
 # custom data structure to hold the state of an HSV filter
 
+game_name = 'MIRMG(1)'
+
 class HsvFilter:
     def __init__(hMin=None, sMin=None, vMin=None, hMax=None, sMax=None, vMax=None,
                  sAdd=None, sSub=None, vAdd=None, vSub=None):
@@ -165,6 +167,8 @@ def process_screen(mandala_screen):
     print(f'camera is start: {camera.is_capturing}')
 
     for i in range(100000):
+
+
         wincap = WindowCapture(mandala_screen)
         new_region = (left, top, wincap.w, wincap.h)
         new_camera = camera.start(region=new_region)
@@ -172,7 +176,7 @@ def process_screen(mandala_screen):
         img = image
 
         orig_height, orig_width = img.shape[:2]
-        fixed_width = 1000
+        fixed_width = 1200
 
         ratio = fixed_width / float(orig_width)
         fixed_height = int(orig_height * ratio)
@@ -184,15 +188,15 @@ def process_screen(mandala_screen):
         gray = cv.cvtColor(filtered_img, cv.COLOR_BGR2GRAY)
         thresh = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
 
-        circles = cv.HoughCircles(thresh, cv.HOUGH_GRADIENT, 1, 20, param1=15, param2=16, minRadius=10, maxRadius=30)
+        circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, 1, param1=95, param2=35, minRadius=16, maxRadius=40)
 
         if circles is not None:
             # Convert the (x, y) coordinates and radius of the circles to integers
             circles = np.round(circles[0, :]).astype("int")
 
             # Loop over the detected circles and draw them
-        for (x, y, r) in circles:
-            cv.circle(img, (x, y), r, (100, 255, 100), 2)
+            for (x, y, r) in circles:
+                cv.circle(gray, (x, y), r, (100, 255, 100), 10)
 
 
         # print(int(len(circles)))
@@ -205,7 +209,7 @@ def process_screen(mandala_screen):
             new_camera.stop()
             camera.start()
 
-        cv.imshow('img', img)
+        cv.imshow('img', gray)
         cv.waitKey(5)
         if cv.waitKey(5) & 0xFF == ord('q'):
             camera.stop()

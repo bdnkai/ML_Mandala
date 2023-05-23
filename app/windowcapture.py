@@ -40,7 +40,6 @@ class WindowCapture:
 
         self.size_w = self.w
         self.size_h = self.h
-        print(self.w, self.h)
 
     def get_screenshot(self):
 
