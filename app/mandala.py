@@ -30,8 +30,8 @@ class HsvFilter:
 TRACKBAR_WINDOW = 'Trackbars'
 
 def init_control_gui():
-    # cv.namedWindow(TRACKBAR_WINDOW, cv.WINDOW_NORMAL)
-    # cv.resizeWindow(TRACKBAR_WINDOW, 350, 700)
+    cv.namedWindow(TRACKBAR_WINDOW, cv.WINDOW_NORMAL)
+    cv.resizeWindow(TRACKBAR_WINDOW, 350, 700)
 
     # required callback. we'll be using getTrackbarPos() to do lookups
     # instead of using the callback.
@@ -41,66 +41,67 @@ def init_control_gui():
 
     # create trackbars for bracketing.
     # OpenCV scale for HSV is H: 0-179, S: 0-255, V: 0-255
-    # cv.createTrackbar('HMin', TRACKBAR_WINDOW, 0, 179, nothing)
-    # cv.createTrackbar('SMin', TRACKBAR_WINDOW, 0, 255, nothing)
-    # cv.createTrackbar('VMin', TRACKBAR_WINDOW, 0, 255, nothing)
-    # cv.createTrackbar('HMax', TRACKBAR_WINDOW, 0, 179, nothing)
-    # cv.createTrackbar('SMax', TRACKBAR_WINDOW, 0, 255, nothing)
-    # cv.createTrackbar('VMax', TRACKBAR_WINDOW, 0, 255, nothing)
-    #
-    # # Set default value for Max HSV trackbars
-    # cv.setTrackbarPos('HMax', TRACKBAR_WINDOW, 179)
-    # cv.setTrackbarPos('SMax', TRACKBAR_WINDOW, 255)
-    # cv.setTrackbarPos('VMax', TRACKBAR_WINDOW, 255)
-    #
-    # # trackbars for increasing/decreasing saturation and value
-    # cv.createTrackbar('SAdd', TRACKBAR_WINDOW, 0, 255, nothing)
-    # cv.createTrackbar('SSub', TRACKBAR_WINDOW, 0, 255, nothing)
-    # cv.createTrackbar('VAdd', TRACKBAR_WINDOW, 0, 255, nothing)
-    # cv.createTrackbar('VSub', TRACKBAR_WINDOW, 0, 255, nothing)
+    cv.createTrackbar('HMin', TRACKBAR_WINDOW, 0, 179, nothing)
+    cv.createTrackbar('SMin', TRACKBAR_WINDOW, 0, 255, nothing)
+    cv.createTrackbar('VMin', TRACKBAR_WINDOW, 0, 255, nothing)
+    cv.createTrackbar('HMax', TRACKBAR_WINDOW, 0, 179, nothing)
+    cv.createTrackbar('SMax', TRACKBAR_WINDOW, 0, 255, nothing)
+    cv.createTrackbar('VMax', TRACKBAR_WINDOW, 0, 255, nothing)
+
+    # Set default value for Max HSV trackbars
+    cv.setTrackbarPos('HMax', TRACKBAR_WINDOW, 179)
+    cv.setTrackbarPos('SMax', TRACKBAR_WINDOW, 255)
+    cv.setTrackbarPos('VMax', TRACKBAR_WINDOW, 255)
+
+    # trackbars for increasing/decreasing saturation and value
+    cv.createTrackbar('SAdd', TRACKBAR_WINDOW, 0, 255, nothing)
+    cv.createTrackbar('SSub', TRACKBAR_WINDOW, 0, 255, nothing)
+    cv.createTrackbar('VAdd', TRACKBAR_WINDOW, 0, 255, nothing)
+    cv.createTrackbar('VSub', TRACKBAR_WINDOW, 0, 255, nothing)
 
 
 # returns an HSV filter object based on the control GUI values
-def get_hsv_filter_from_controls():
+def get_hsv_filter_from_controls(ratio):
 
     hsv_filter = HsvFilter()
 
     # Get current positions of all trackbars
-    # hsv_filter.hMin = cv.getTrackbarPos('HMin', TRACKBAR_WINDOW)
-    # hsv_filter.sMin = cv.getTrackbarPos('SMin', TRACKBAR_WINDOW)
-    # hsv_filter.vMin = cv.getTrackbarPos('VMin', TRACKBAR_WINDOW)
-    # hsv_filter.hMax = cv.getTrackbarPos('HMax', TRACKBAR_WINDOW)
-    # hsv_filter.sMax = cv.getTrackbarPos('SMax', TRACKBAR_WINDOW)
-    # hsv_filter.vMax = cv.getTrackbarPos('VMax', TRACKBAR_WINDOW)
-    # hsv_filter.sAdd = cv.getTrackbarPos('SAdd', TRACKBAR_WINDOW)
-    # hsv_filter.sSub = cv.getTrackbarPos('SSub', TRACKBAR_WINDOW)
-    # hsv_filter.vAdd = cv.getTrackbarPos('VAdd', TRACKBAR_WINDOW)
-    # hsv_filter.vSub = cv.getTrackbarPos('VSub', TRACKBAR_WINDOW)
-    #
+    hsv_filter.hMin = cv.getTrackbarPos('HMin', TRACKBAR_WINDOW)
+    hsv_filter.sMin = cv.getTrackbarPos('SMin', TRACKBAR_WINDOW)
+    hsv_filter.vMin = cv.getTrackbarPos('VMin', TRACKBAR_WINDOW)
+    hsv_filter.hMax = cv.getTrackbarPos('HMax', TRACKBAR_WINDOW)
+    hsv_filter.sMax = cv.getTrackbarPos('SMax', TRACKBAR_WINDOW)
+    hsv_filter.vMax = cv.getTrackbarPos('VMax', TRACKBAR_WINDOW)
+    hsv_filter.sAdd = cv.getTrackbarPos('SAdd', TRACKBAR_WINDOW)
+    hsv_filter.sSub = cv.getTrackbarPos('SSub', TRACKBAR_WINDOW)
+    hsv_filter.vAdd = cv.getTrackbarPos('VAdd', TRACKBAR_WINDOW)
+    hsv_filter.vSub = cv.getTrackbarPos('VSub', TRACKBAR_WINDOW)
+
 
     # text filter
     # hsv_filter.hMin = 0
     # hsv_filter.sMin = 0
-    # hsv_filter.vMin = 133
-    # hsv_filter.hMax = 180
+    # hsv_filter.vMin = 0
+    # hsv_filter.hMax = 176
+    # hsv_filter.sMax = 255
+    # hsv_filter.vMax = 255
+    # hsv_filter.sAdd = 255
+    # hsv_filter.sSub = 0
+    # hsv_filter.vAdd = 69
+    # hsv_filter.vSub = 71
+
+    # circle filtering
+    # hsv_filter.hMin = 0
+    # hsv_filter.sMin = 58
+    # hsv_filter.vMin = 0
+    # hsv_filter.hMax = 115
     # hsv_filter.sMax = 255
     # hsv_filter.vMax = 255
     # hsv_filter.sAdd = 0
-    # hsv_filter.sSub = 255
-    # hsv_filter.vAdd = 34
+    # hsv_filter.sSub = 0
+    # hsv_filter.vAdd = 0
     # hsv_filter.vSub = 0
 
-    # circle filtering
-    hsv_filter.hMin = 0
-    hsv_filter.sMin = 58
-    hsv_filter.vMin = 0
-    hsv_filter.hMax = 115
-    hsv_filter.sMax = 255
-    hsv_filter.vMax = 255
-    hsv_filter.sAdd = 0
-    hsv_filter.sSub = 0
-    hsv_filter.vAdd = 0
-    hsv_filter.vSub = 0
 
 
     return hsv_filter
@@ -168,21 +169,22 @@ def process_screen(mandala_screen):
 
     for i in range(100000):
 
-
+        # fetch application size
         wincap = WindowCapture(mandala_screen)
         new_region = (left, top, wincap.w, wincap.h)
         new_camera = camera.start(region=new_region)
         image = camera.get_latest_frame()  # Will block until new frame available
         img = image
 
+        # readjust size to 1200 max width ratio
         orig_height, orig_width = img.shape[:2]
-        fixed_width = 1200
-
+        fixed_width = 2400
         ratio = fixed_width / float(orig_width)
         fixed_height = int(orig_height * ratio)
         img = cv.resize(img, (fixed_width, fixed_height))
 
-        hsv_filter = get_hsv_filter_from_controls()
+        # pass image and ratio to hsv_filter
+        hsv_filter = get_hsv_filter_from_controls(ratio)
         filtered_img = apply_hsv_filter(img, hsv_filter=hsv_filter)
 
         gray = cv.cvtColor(filtered_img, cv.COLOR_BGR2GRAY)
@@ -209,10 +211,12 @@ def process_screen(mandala_screen):
             new_camera.stop()
             camera.start()
 
-        cv.imshow('img', gray)
+        cv.imshow('img', thresh)
         cv.waitKey(5)
         if cv.waitKey(5) & 0xFF == ord('q'):
             camera.stop()
+
+
     # config = '-c char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789% --oem 3'
     # spotted_strings = []
     # text = pytesseract.image_to_string(filtered_img, lang='eng', config=config)
