@@ -2,6 +2,7 @@ import cv2 as cv
 import numpy as np
 import pytesseract
 import matplotlib.pyplot as plt
+import re
 import dxcam
 import gym
 from windowcapture import WindowCapture
@@ -28,79 +29,114 @@ class HsvFilter:
 
 
 TRACKBAR_WINDOW = 'Trackbars'
-
+case = ''
 def init_control_gui():
-    cv.namedWindow(TRACKBAR_WINDOW, cv.WINDOW_NORMAL)
-    cv.resizeWindow(TRACKBAR_WINDOW, 350, 700)
+    # cv.namedWindow(TRACKBAR_WINDOW, cv.WINDOW_NORMAL)
+    # cv.resizeWindow(TRACKBAR_WINDOW, 350, 700)
 
-    # required callback. we'll be using getTrackbarPos() to do lookups
-    # instead of using the callback.
+
 
     def nothing(position):
         pass
 
     # create trackbars for bracketing.
     # OpenCV scale for HSV is H: 0-179, S: 0-255, V: 0-255
-    cv.createTrackbar('HMin', TRACKBAR_WINDOW, 0, 179, nothing)
-    cv.createTrackbar('SMin', TRACKBAR_WINDOW, 0, 255, nothing)
-    cv.createTrackbar('VMin', TRACKBAR_WINDOW, 0, 255, nothing)
-    cv.createTrackbar('HMax', TRACKBAR_WINDOW, 0, 179, nothing)
-    cv.createTrackbar('SMax', TRACKBAR_WINDOW, 0, 255, nothing)
-    cv.createTrackbar('VMax', TRACKBAR_WINDOW, 0, 255, nothing)
+    if case == 'trackbar':
+        cv.createTrackbar('HMin', TRACKBAR_WINDOW, 0, 179, nothing)
+        cv.createTrackbar('SMin', TRACKBAR_WINDOW, 0, 255, nothing)
+        cv.createTrackbar('VMin', TRACKBAR_WINDOW, 0, 255, nothing)
+        cv.createTrackbar('HMax', TRACKBAR_WINDOW, 0, 179, nothing)
+        cv.createTrackbar('SMax', TRACKBAR_WINDOW, 0, 255, nothing)
+        cv.createTrackbar('VMax', TRACKBAR_WINDOW, 0, 255, nothing)
 
-    # Set default value for Max HSV trackbars
-    cv.setTrackbarPos('HMax', TRACKBAR_WINDOW, 179)
-    cv.setTrackbarPos('SMax', TRACKBAR_WINDOW, 255)
-    cv.setTrackbarPos('VMax', TRACKBAR_WINDOW, 255)
+        # Set default value for Max HSV trackbars
+        cv.setTrackbarPos('HMax', TRACKBAR_WINDOW, 179)
+        cv.setTrackbarPos('SMax', TRACKBAR_WINDOW, 255)
+        cv.setTrackbarPos('VMax', TRACKBAR_WINDOW, 255)
 
-    # trackbars for increasing/decreasing saturation and value
-    cv.createTrackbar('SAdd', TRACKBAR_WINDOW, 0, 255, nothing)
-    cv.createTrackbar('SSub', TRACKBAR_WINDOW, 0, 255, nothing)
-    cv.createTrackbar('VAdd', TRACKBAR_WINDOW, 0, 255, nothing)
-    cv.createTrackbar('VSub', TRACKBAR_WINDOW, 0, 255, nothing)
+        # trackbars for increasing/decreasing saturation and value
+        cv.createTrackbar('SAdd', TRACKBAR_WINDOW, 0, 255, nothing)
+        cv.createTrackbar('SSub', TRACKBAR_WINDOW, 0, 255, nothing)
+        cv.createTrackbar('VAdd', TRACKBAR_WINDOW, 0, 255, nothing)
+        cv.createTrackbar('VSub', TRACKBAR_WINDOW, 0, 255, nothing)
 
 
 # returns an HSV filter object based on the control GUI values
-def get_hsv_filter_from_controls(ratio):
+def get_hsv_filter_from_controls(case, ratio):
 
     hsv_filter = HsvFilter()
 
     # Get current positions of all trackbars
-    hsv_filter.hMin = cv.getTrackbarPos('HMin', TRACKBAR_WINDOW)
-    hsv_filter.sMin = cv.getTrackbarPos('SMin', TRACKBAR_WINDOW)
-    hsv_filter.vMin = cv.getTrackbarPos('VMin', TRACKBAR_WINDOW)
-    hsv_filter.hMax = cv.getTrackbarPos('HMax', TRACKBAR_WINDOW)
-    hsv_filter.sMax = cv.getTrackbarPos('SMax', TRACKBAR_WINDOW)
-    hsv_filter.vMax = cv.getTrackbarPos('VMax', TRACKBAR_WINDOW)
-    hsv_filter.sAdd = cv.getTrackbarPos('SAdd', TRACKBAR_WINDOW)
-    hsv_filter.sSub = cv.getTrackbarPos('SSub', TRACKBAR_WINDOW)
-    hsv_filter.vAdd = cv.getTrackbarPos('VAdd', TRACKBAR_WINDOW)
-    hsv_filter.vSub = cv.getTrackbarPos('VSub', TRACKBAR_WINDOW)
+    if(case == 'text_filter'):
+        print('case = text filter')
+
+        # text filter
+        # hsv_filter.hMin = 2
+        # hsv_filter.sMin = 0
+        # hsv_filter.vMin = 0
+        # hsv_filter.hMax = 176
+        # hsv_filter.sMax = 255
+        # hsv_filter.vMax = 255
+        # hsv_filter.sAdd = 255
+        # hsv_filter.sSub = 23
+        # hsv_filter.vAdd = 69
+        # hsv_filter.vSub = 71
+
+        hsv_filter.hMin = 0
+        hsv_filter.sMin = 0
+        hsv_filter.vMin = 133
+        hsv_filter.hMax = 180
+        hsv_filter.sMax = 255
+        hsv_filter.vMax = 255
+        hsv_filter.sAdd = 0
+        hsv_filter.sSub = 255
+        hsv_filter.vAdd = 34
+        hsv_filter.vSub = 0
+
+        # hsv_filter.hMin = 0
+        # hsv_filter.sMin = 0
+        # hsv_filter.vMin = 51
+        # hsv_filter.hMax = 179
+        # hsv_filter.sMax = 255
+        # hsv_filter.vMax = 250
+        # hsv_filter.sAdd = 0
+        # hsv_filter.sSub = 83
+        # hsv_filter.vAdd = 141
+        # hsv_filter.vSub = 126
+
+        return hsv_filter
+
+    if case == 'circle_filter':
+
+        print('case = circle filter')
+        # circle filtering
+        hsv_filter.hMin = 0
+        hsv_filter.sMin = 58
+        hsv_filter.vMin = 0
+        hsv_filter.hMax = 115
+        hsv_filter.sMax = 255
+        hsv_filter.vMax = 255
+        hsv_filter.sAdd = 0
+        hsv_filter.sSub = 0
+        hsv_filter.vAdd = 0
+        hsv_filter.vSub = 0
+
+        return hsv_filter
+
+    else:
+
+        hsv_filter.hMin = cv.getTrackbarPos('HMin', TRACKBAR_WINDOW)
+        hsv_filter.sMin = cv.getTrackbarPos('SMin', TRACKBAR_WINDOW)
+        hsv_filter.vMin = cv.getTrackbarPos('VMin', TRACKBAR_WINDOW)
+        hsv_filter.hMax = cv.getTrackbarPos('HMax', TRACKBAR_WINDOW)
+        hsv_filter.sMax = cv.getTrackbarPos('SMax', TRACKBAR_WINDOW)
+        hsv_filter.vMax = cv.getTrackbarPos('VMax', TRACKBAR_WINDOW)
+        hsv_filter.sAdd = cv.getTrackbarPos('SAdd', TRACKBAR_WINDOW)
+        hsv_filter.sSub = cv.getTrackbarPos('SSub', TRACKBAR_WINDOW)
+        hsv_filter.vAdd = cv.getTrackbarPos('VAdd', TRACKBAR_WINDOW)
+        hsv_filter.vSub = cv.getTrackbarPos('VSub', TRACKBAR_WINDOW)
 
 
-    # text filter
-    # hsv_filter.hMin = 0
-    # hsv_filter.sMin = 0
-    # hsv_filter.vMin = 0
-    # hsv_filter.hMax = 176
-    # hsv_filter.sMax = 255
-    # hsv_filter.vMax = 255
-    # hsv_filter.sAdd = 255
-    # hsv_filter.sSub = 0
-    # hsv_filter.vAdd = 69
-    # hsv_filter.vSub = 71
-
-    # circle filtering
-    # hsv_filter.hMin = 0
-    # hsv_filter.sMin = 58
-    # hsv_filter.vMin = 0
-    # hsv_filter.hMax = 115
-    # hsv_filter.sMax = 255
-    # hsv_filter.vMax = 255
-    # hsv_filter.sAdd = 0
-    # hsv_filter.sSub = 0
-    # hsv_filter.vAdd = 0
-    # hsv_filter.vSub = 0
 
 
 
@@ -170,60 +206,112 @@ def process_screen(mandala_screen):
 
         # fetch application size
         wincap = WindowCapture(mandala_screen)
-        new_region = (left, top, wincap.w, wincap.h)
+        new_region = (left + 5, top + 55, wincap.w - top, wincap.h- top)
         new_camera = camera.start(region=new_region)
         image = camera.get_latest_frame()  # Will block until new frame available
         img = image
 
         # readjust size to 1200 max width ratio
         orig_height, orig_width = img.shape[:2]
-        fixed_width = 2400
+        fixed_width = 2800
         ratio = fixed_width / float(orig_width)
         fixed_height = int(orig_height * ratio)
         img = cv.resize(img, (fixed_width, fixed_height))
 
-        # pass image and ratio to hsv_filter
-        hsv_filter = get_hsv_filter_from_controls(ratio)
+        # pass image and scenario to hsv_filter
+        case = 'text_filter'
+
+        hsv_filter = get_hsv_filter_from_controls(case, ratio=1)
         filtered_img = apply_hsv_filter(img, hsv_filter=hsv_filter)
 
         gray = cv.cvtColor(filtered_img, cv.COLOR_BGR2GRAY)
         thresh = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
 
-        circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, 1, param1=95, param2=35, minRadius=16, maxRadius=40)
+        config = '-c char_whitelist= a b c d e f g h i j k l m n o p q r s t u v w x y z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 1 2 3 4 5 6 7 8 9 % / --oem 3 --psm 12'
 
-        if circles is not None:
-            # Convert the (x, y) coordinates and radius of the circles to integers
-            circles = np.round(circles[0, :]).astype("int")
+        if case == 'circle_filter':
+            circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, 1, param1=95, param2=35, minRadius=16, maxRadius=40)
 
-            # Loop over the detected circles and draw them
-            for (x, y, r) in circles:
-                cv.circle(gray, (x, y), r, (100, 255, 100), 10)
+            if circles is not None:
+                # Convert the (x, y) coordinates and radius of the circles to integers
+                circles = np.round(circles[0, :]).astype("int")
 
+                # Loop over the detected circles and draw them
+                for (x, y, r) in circles:
+                    cv.circle(gray, (x, y), r, (100, 255, 100), 10)
+
+            cv.imshow('img', gray)
+            cv.waitKey(5)
+
+            if cv.waitKey(1) & 0xFF == ord('q'):
+                camera.stop()
+                new_camera.stop()
+                break
+
+            if camera:
+                camera.stop()
+
+            if new_camera:
+                new_camera.stop()
+                camerqqa.start()
+
+
+        if case == 'text_filter':
+            text_right_box = pytesseract.image_to_string(thresh,lang='eng', config=config)
+            if text_right_box:
+
+                text = re.sub('[^A-Za-z0-9-%-/]+', ' ', text_right_box).lower()
+                # text = text_right_box
+
+                spotted_strings = []
+                lines = text.split('\n')
+                for line in lines:
+                    print(f'RAW... {line}')
+                    if (int(len(line)) <= int(1)):
+                        print(f'CLEANING SOME... {line}')
+                    if lines and ' ' in lines[0]:
+                        print(f'CLEANING SPACES... {line}')
+                        if (int(len(line)) <= int(1)):
+                            print(f'CLEANING MORE... {line}')
+
+
+            # cv.imshow('img', gray)
+            # cv.waitKey(1)
+
+            # if cv.waitKey(1) & 0xFF == ord('q'):
+            #     camera.stop()
+            #     new_camera.stop()
+            #     break
+
+            if camera:
+                camera.stop()
+
+            if new_camera:
+                new_camera.stop()
+                camerqqa.start()
 
         # print(int(len(circles)))
             # plt.imshow(cv.cvtColor(gray, cv.COLOR_BGR2RGB))
             # plt.show()
 
+        # cv.imshow('img', gray)
+        # cv.waitKey(1)
+        # if cv.waitKey(1) & 0xFF == ord('q'):
+        #     camera.stop()
+        #     new_camera.stop()
+        #     break
+
         if camera:
             camera.stop()
+
         if new_camera:
             new_camera.stop()
-            camera.start()
-
-        cv.imshow('img', thresh)
-        cv.waitKey(5)
-        if cv.waitKey(5) & 0xFF == ord('q'):
-            camera.stop()
+            camerqqa.start()
 
 
-    # config = '-c char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789% --oem 3'
-    # spotted_strings = []
-    # text = pytesseract.image_to_string(filtered_img, lang='eng', config=config)
-    # lines = text.split('\n')
-    # for line in lines
-    #     print(line)
-    #     if lines and ' ' in lines[0]:
-    #         print(lines)
+
+
+
 
 
             #Create a feature vector
@@ -232,7 +320,7 @@ def process_screen(mandala_screen):
     # Feed the feature vector to your model
     # (You'll need to replace this with your actual model code)
     # model_output = model.predict(feature_vector)
-    # print (model_output)q
+    # print (model_output)
     # return model_output
 
 
