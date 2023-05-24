@@ -107,7 +107,6 @@ def get_hsv_filter_from_controls(ratio):
     return hsv_filter
 
 
-
 def apply_hsv_filter(original_image, hsv_filter=None):
     # convert image to HSV
     hsv = cv.cvtColor(original_image, cv.COLOR_BGR2HSV)
