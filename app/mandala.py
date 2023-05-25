@@ -12,6 +12,7 @@ from windowcapture import WindowCapture
 
 game_name = 'MIRMG(1)'
 
+
 class HsvFilter:
     def __init__(hMin=None, sMin=None, vMin=None, hMax=None, sMax=None, vMax=None,
                  sAdd=None, sSub=None, vAdd=None, vSub=None):
@@ -70,18 +71,6 @@ def get_hsv_filter_from_controls(case, ratio):
     if(case == 'text_filter'):
         print('case = text filter')
 
-        # text filter
-        # hsv_filter.hMin = 2
-        # hsv_filter.sMin = 0
-        # hsv_filter.vMin = 0
-        # hsv_filter.hMax = 176
-        # hsv_filter.sMax = 255
-        # hsv_filter.vMax = 255
-        # hsv_filter.sAdd = 255
-        # hsv_filter.sSub = 23
-        # hsv_filter.vAdd = 69
-        # hsv_filter.vSub = 71
-
         hsv_filter.hMin = 0
         hsv_filter.sMin = 0
         hsv_filter.vMin = 133
@@ -90,19 +79,8 @@ def get_hsv_filter_from_controls(case, ratio):
         hsv_filter.vMax = 255
         hsv_filter.sAdd = 0
         hsv_filter.sSub = 255
-        hsv_filter.vAdd = 34
+        hsv_filter.vAdd = 65
         hsv_filter.vSub = 0
-
-        # hsv_filter.hMin = 0
-        # hsv_filter.sMin = 0
-        # hsv_filter.vMin = 51
-        # hsv_filter.hMax = 179
-        # hsv_filter.sMax = 255
-        # hsv_filter.vMax = 250
-        # hsv_filter.sAdd = 0
-        # hsv_filter.sSub = 83
-        # hsv_filter.vAdd = 141
-        # hsv_filter.vSub = 126
 
         return hsv_filter
 
@@ -189,106 +167,116 @@ def process_screen(mandala_screen):
 
     init_control_gui()
 
-
-
+    wincap = WindowCapture(mandala_screen)
     # rois = []
-    left, top = 0, 0
-    right, bottom = 1, 1
-    region = (left, top, right, bottom)
+    activation_left, activation_top = 10, 105
+    actiation_right, activation_bottom = (wincap.w - 1000), (wincap.h - 350)
+    activation_chance_region = (activation_left, activation_top, actiation_right, activation_bottom)
 
+    enhance_left, enhance_top = (wincap.w - (wincap.w - 925)), (wincap.h - (wincap.h - 210))
+    enhance_right, enhance_bottom = (wincap.w - 20), (wincap.h - 95)
+    enhance_chance_region = (enhance_left, enhance_top, enhance_right, enhance_bottom)
 
+    region = [enhance_chance_region, activation_chance_region]
     camera = dxcam.create(output_idx=0, output_color="BGR")
+
 
 
     print(f'camera is start: {camera.is_capturing}')
 
-    for i in range(100000):
+    # for i in range(100000):
+    cv.namedWindow("img", cv.WINDOW_NORMAL)  # Create window with freedom of dimensions
 
-        # fetch application size
-        wincap = WindowCapture(mandala_screen)
-        new_region = (left + 5, top + 55, wincap.w - top, wincap.h- top)
-        new_camera = camera.start(region=new_region)
-        image = camera.get_latest_frame()  # Will block until new frame available
-        img = image
+    # fetch application size
 
-        # readjust size to 1200 max width ratio
-        orig_height, orig_width = img.shape[:2]
-        fixed_width = 2800
-        ratio = fixed_width / float(orig_width)
-        fixed_height = int(orig_height * ratio)
-        img = cv.resize(img, (fixed_width, fixed_height))
+    new_camera = camera.start(region=activation_chance_region)
+    image = camera.get_latest_frame()  # Will block until new frame available
 
-        # pass image and scenario to hsv_filter
-        case = 'text_filter'
+    # print(image2)
+    img = image
 
-        hsv_filter = get_hsv_filter_from_controls(case, ratio=1)
-        filtered_img = apply_hsv_filter(img, hsv_filter=hsv_filter)
+    # readjust size to 1200 max width ratio
+    orig_height, orig_width = img.shape[:2]
+    fixed_width = 1600
+    ratio = fixed_width / float(orig_width)
+    fixed_height = int(orig_height * ratio)
+    img = cv.resize(img, (fixed_width, fixed_height))
 
-        gray = cv.cvtColor(filtered_img, cv.COLOR_BGR2GRAY)
-        thresh = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
+    # pass image and scenario to hsv_filter
+    case = 'text_filter'
 
-        config = '-c char_whitelist= a b c d e f g h i j k l m n o p q r s t u v w x y z A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 1 2 3 4 5 6 7 8 9 % / --oem 3 --psm 12'
+    hsv_filter = get_hsv_filter_from_controls(case, ratio=1)
+    filtered_img = apply_hsv_filter(img, hsv_filter=hsv_filter)
 
-        if case == 'circle_filter':
-            circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, 1, param1=95, param2=35, minRadius=16, maxRadius=40)
+    gray = cv.cvtColor(filtered_img, cv.COLOR_BGR2GRAY)
+    thresh = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
 
-            if circles is not None:
-                # Convert the (x, y) coordinates and radius of the circles to integers
-                circles = np.round(circles[0, :]).astype("int")
+    config = '-c char_whitelist= --oem 3 --psm 4'
+    if case == 'circle_filter':
+        circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, 1, param1=95, param2=35, minRadius=16, maxRadius=40)
 
-                # Loop over the detected circles and draw them
-                for (x, y, r) in circles:
-                    cv.circle(gray, (x, y), r, (100, 255, 100), 10)
+        if circles is not None:
+            # Convert the (x, y) coordinates and radius of the circles to integers
+            circles = np.round(circles[0, :]).astype("int")
 
-            cv.imshow('img', gray)
-            cv.waitKey(5)
+            # Loop over the detected circles and draw them
+            for (x, y, r) in circles:
+                cv.circle(gray, (x, y), r, (100, 255, 100), 10)
 
-            if cv.waitKey(1) & 0xFF == ord('q'):
-                camera.stop()
-                new_camera.stop()
-                break
+        cv.imshow('img', gray)
+        cv.waitKey(5)
 
-            if camera:
-                camera.stop()
+        if cv.waitKey(1) & 0xFF == ord('q'):
+            camera.stop()
+            new_camera.stop()
+            # break
 
-            if new_camera:
-                new_camera.stop()
-                camerqqa.start()
+        if camera:
+            camera.stop()
 
-
-        if case == 'text_filter':
-            text_right_box = pytesseract.image_to_string(thresh,lang='eng', config=config)
-            if text_right_box:
-
-                text = re.sub('[^A-Za-z0-9-%-/]+', ' ', text_right_box).lower()
-                # text = text_right_box
-
-                spotted_strings = []
-                lines = text.split('\n')
-                for line in lines:
-                    print(f'RAW... {line}')
-                    if (int(len(line)) <= int(1)):
-                        print(f'CLEANING SOME... {line}')
-                    if lines and ' ' in lines[0]:
-                        print(f'CLEANING SPACES... {line}')
-                        if (int(len(line)) <= int(1)):
-                            print(f'CLEANING MORE... {line}')
+        if new_camera:
+            new_camera.stop()
+            camera.start()
 
 
-            # cv.imshow('img', gray)
-            # cv.waitKey(1)
 
-            # if cv.waitKey(1) & 0xFF == ord('q'):
-            #     camera.stop()
-            #     new_camera.stop()
-            #     break
 
-            if camera:
-                camera.stop()
 
-            if new_camera:
-                new_camera.stop()
-                camerqqa.start()
+    words = []
+    if case == 'text_filter':
+        text_right_box = pytesseract.image_to_string(thresh, lang='eng', config=config)
+        if text_right_box:
+
+            text = re.sub('[^A-Za-z0-9-%-/]+', ' ', text_right_box).lower()
+            # text = text_right_box
+            # print(text)
+            spotted_strings = []
+            lines = text.split('\n')
+            for line in lines:
+
+                if lines and ' ' in lines[0]:
+
+                    print(f'{lines}')
+
+                    # if (int(len([line for line in lines[0]])) < int(1)):
+
+                        # print(f'CLEANING MORE... {line}')
+
+
+        cv.imshow('img', thresh)
+        cv.waitKey(1)
+
+        if cv.waitKey(1) & 0xFF == ord('q'):
+            camera.stop()
+            new_camera.stop()
+            # break
+
+        if camera:
+            camera.stop()
+
+        if new_camera:
+            new_camera.stop()
+            camera.start()
 
         # print(int(len(circles)))
             # plt.imshow(cv.cvtColor(gray, cv.COLOR_BGR2RGB))
