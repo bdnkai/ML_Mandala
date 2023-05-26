@@ -7,11 +7,30 @@ import dxcam
 import gym
 from windowcapture import WindowCapture
 
-# env = gym.make(environment_name)
-# custom data structure to hold the state of an HSV filter
 
-game_name = 'MIRMG(1)'
 
+class Action_State:
+    def __init__(self):
+        super(Action_State, self).__init__()
+
+        self.start = False
+
+        self.get_probability = False
+        self.get_sector_position = False
+        self.get_sector_info =False
+
+        self.proc_text = True if self.get_probability == True or self.get_sector_info == True else False
+        self.proc_nodes = True if self.get_sector_position == True else False
+
+        self.debug = False
+
+
+        self.proccessing = True if self.get_probability and self.get_sector_info and self.get_sector_position == True else False
+        self.ready = True if self.proccessing == False else True
+        self.probability_finished = False
+        self. sector_finished = False
+
+        self.end = True if self.probability_finished and self.get_sector_info == True else False
 
 class HsvFilter:
     def __init__(hMin=None, sMin=None, vMin=None, hMax=None, sMax=None, vMax=None,
@@ -27,49 +46,20 @@ class HsvFilter:
         vAdd = vAdd
         vSub = vSub
 
-
-
-TRACKBAR_WINDOW = 'Trackbars'
-case = ''
 def init_control_gui():
-    # cv.namedWindow(TRACKBAR_WINDOW, cv.WINDOW_NORMAL)
-    # cv.resizeWindow(TRACKBAR_WINDOW, 350, 700)
-
 
 
     def nothing(position):
         pass
 
-    # create trackbars for bracketing.
-    # OpenCV scale for HSV is H: 0-179, S: 0-255, V: 0-255
-    if case == 'trackbar':
-        cv.createTrackbar('HMin', TRACKBAR_WINDOW, 0, 179, nothing)
-        cv.createTrackbar('SMin', TRACKBAR_WINDOW, 0, 255, nothing)
-        cv.createTrackbar('VMin', TRACKBAR_WINDOW, 0, 255, nothing)
-        cv.createTrackbar('HMax', TRACKBAR_WINDOW, 0, 179, nothing)
-        cv.createTrackbar('SMax', TRACKBAR_WINDOW, 0, 255, nothing)
-        cv.createTrackbar('VMax', TRACKBAR_WINDOW, 0, 255, nothing)
+def get_hsv_filter_from_controls(scenario):
 
-        # Set default value for Max HSV trackbars
-        cv.setTrackbarPos('HMax', TRACKBAR_WINDOW, 179)
-        cv.setTrackbarPos('SMax', TRACKBAR_WINDOW, 255)
-        cv.setTrackbarPos('VMax', TRACKBAR_WINDOW, 255)
-
-        # trackbars for increasing/decreasing saturation and value
-        cv.createTrackbar('SAdd', TRACKBAR_WINDOW, 0, 255, nothing)
-        cv.createTrackbar('SSub', TRACKBAR_WINDOW, 0, 255, nothing)
-        cv.createTrackbar('VAdd', TRACKBAR_WINDOW, 0, 255, nothing)
-        cv.createTrackbar('VSub', TRACKBAR_WINDOW, 0, 255, nothing)
-
-
-# returns an HSV filter object based on the control GUI values
-def get_hsv_filter_from_controls(case, ratio):
-
+    scenario = scenario
     hsv_filter = HsvFilter()
 
-    # Get current positions of all trackbars
-    if(case == 'text_filter'):
-        print('case = text filter')
+
+    if scenario == 'mandala_messages':
+        print('HSV for TEXT pulling ACTIVATED')
 
         hsv_filter.hMin = 0
         hsv_filter.sMin = 0
@@ -84,9 +74,9 @@ def get_hsv_filter_from_controls(case, ratio):
 
         return hsv_filter
 
-    if case == 'circle_filter':
+    if scenario == 'mandala_middle':
 
-        print('case = circle filter')
+        print('HSV for NODE pulling ACTIVATED')
         # circle filtering
         hsv_filter.hMin = 0
         hsv_filter.sMin = 58
@@ -100,25 +90,6 @@ def get_hsv_filter_from_controls(case, ratio):
         hsv_filter.vSub = 0
 
         return hsv_filter
-
-    else:
-
-        hsv_filter.hMin = cv.getTrackbarPos('HMin', TRACKBAR_WINDOW)
-        hsv_filter.sMin = cv.getTrackbarPos('SMin', TRACKBAR_WINDOW)
-        hsv_filter.vMin = cv.getTrackbarPos('VMin', TRACKBAR_WINDOW)
-        hsv_filter.hMax = cv.getTrackbarPos('HMax', TRACKBAR_WINDOW)
-        hsv_filter.sMax = cv.getTrackbarPos('SMax', TRACKBAR_WINDOW)
-        hsv_filter.vMax = cv.getTrackbarPos('VMax', TRACKBAR_WINDOW)
-        hsv_filter.sAdd = cv.getTrackbarPos('SAdd', TRACKBAR_WINDOW)
-        hsv_filter.sSub = cv.getTrackbarPos('SSub', TRACKBAR_WINDOW)
-        hsv_filter.vAdd = cv.getTrackbarPos('VAdd', TRACKBAR_WINDOW)
-        hsv_filter.vSub = cv.getTrackbarPos('VSub', TRACKBAR_WINDOW)
-
-
-
-
-
-    return hsv_filter
 
 
 def apply_hsv_filter(original_image, hsv_filter=None):
@@ -162,165 +133,127 @@ def shift_channel(c, amount):
         c[c > lim] -= amount
     return c
 
-def process_screen(mandala_screen):
 
 
-    init_control_gui()
+camera = dxcam.create(output_idx=0, output_color="BGR")
 
-    wincap = WindowCapture(mandala_screen)
-    # rois = []
-    activation_left, activation_top = 10, 105
-    actiation_right, activation_bottom = (wincap.w - 1000), (wincap.h - 350)
-    activation_chance_region = (activation_left, activation_top, actiation_right, activation_bottom)
+def mandala_node(img):
+    wincap = WindowCapture(img)
 
-    enhance_left, enhance_top = (wincap.w - (wincap.w - 925)), (wincap.h - (wincap.h - 210))
-    enhance_right, enhance_bottom = (wincap.w - 20), (wincap.h - 95)
-    enhance_chance_region = (enhance_left, enhance_top, enhance_right, enhance_bottom)
+    activation_left, activation_top = 10, 110
+    activation_right, activation_bottom = (wincap.w - 1000), (wincap.h - 350)
 
-    region = [enhance_chance_region, activation_chance_region]
-    camera = dxcam.create(output_idx=0, output_color="BGR")
+    sector_left, sector_top = (wincap.w - (wincap.w - 925)), (wincap.h - (wincap.h - 210))
+    sector_right, sector_bottom = (wincap.w - 20), (wincap.h - 95)
 
+    mandala_left, mandala_top = (activation_right, activation_top)
+    mandala_right, mandala_bottom = (sector_left, sector_bottom)
 
+    mandala_region = (mandala_left + 240, mandala_top + 50, mandala_right - 200, mandala_bottom - 50)
+    activation_region = (activation_left, activation_top, activation_right, activation_bottom)
+    sector_region = (sector_left, sector_top, sector_right, sector_bottom)
 
-    print(f'camera is start: {camera.is_capturing}')
+    mandala_camera = camera.start(region= mandala_region)
+    print(f'camera is activated for mandala_node: {camera.is_capturing}')
 
-    # for i in range(100000):
-    cv.namedWindow("img", cv.WINDOW_NORMAL)  # Create window with freedom of dimensions
-
-    # fetch application size
-
-    new_camera = camera.start(region=activation_chance_region)
     image = camera.get_latest_frame()  # Will block until new frame available
 
-    # print(image2)
     img = image
 
-    # readjust size to 1200 max width ratio
+    orig_height, orig_width = img.shape[:2]
+    fixed_width = orig_width
+    ratio = fixed_width / float(orig_width)
+    fixed_height = int(orig_height * ratio)
+    img = cv.resize(img, (fixed_width, fixed_height))
+
+    hsv_filter = get_hsv_filter_from_controls('mandala_middle')
+    filtered_img = apply_hsv_filter(img, hsv_filter=hsv_filter)
+
+    gray = cv.cvtColor(filtered_img, cv.COLOR_BGR2GRAY)
+    thresh = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
+    circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, 50, param1=95, param2=35, minRadius=int(20), maxRadius=int(40))
+
+    if circles is not None:
+        # Convert the (x, y) coordinates and radius of the circles to integers
+        circles = np.round(circles[0, :]).astype("int")
+
+        # Loop over the detected circles and draw them
+        for (x, y, r) in circles:
+            cv.circle(img, (x, y), r, (100, 255, 100), 2)
+            print(x,y)
+
+        camera.stop()
+        return (x,y)
+
+
+
+
+
+case = 'text'
+words = []
+def mandala_message(img, location):
+    position = location
+
+    wincap = WindowCapture(img)
+
+    activation_left, activation_top = 10, 110
+    activation_right, activation_bottom = (wincap.w - 1000), (wincap.h - 350)
+
+    sector_left, sector_top = (wincap.w - (wincap.w - 925)), (wincap.h - (wincap.h - 210))
+    sector_right, sector_bottom = (wincap.w - 20), (wincap.h - 95)
+
+    mandala_left, mandala_top = (activation_right, activation_top)
+    mandala_right, mandala_bottom = (sector_left, sector_bottom)
+
+    mandala_region = (mandala_left + 240, mandala_top + 50, mandala_right - 200, mandala_bottom - 50)
+    activation_region = (activation_left, activation_top, activation_right, activation_bottom)
+    sector_region = (sector_left, sector_top, sector_right, sector_bottom)
+
+    text_camera = camera.start(region=sector_region) if position == 'right' else camera.start(region= activation_region)
+
+    print(f'camera is activated for mandala_text: {camera.is_capturing}')
+
+    image = camera.get_latest_frame()
+
+    img = image
+
     orig_height, orig_width = img.shape[:2]
     fixed_width = 1600
     ratio = fixed_width / float(orig_width)
     fixed_height = int(orig_height * ratio)
     img = cv.resize(img, (fixed_width, fixed_height))
 
-    # pass image and scenario to hsv_filter
-    case = 'text_filter'
-
-    hsv_filter = get_hsv_filter_from_controls(case, ratio=1)
+    hsv_filter = get_hsv_filter_from_controls('mandala_messages')
     filtered_img = apply_hsv_filter(img, hsv_filter=hsv_filter)
 
     gray = cv.cvtColor(filtered_img, cv.COLOR_BGR2GRAY)
     thresh = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
 
     config = '-c char_whitelist= --oem 3 --psm 4'
-    if case == 'circle_filter':
-        circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, 1, param1=95, param2=35, minRadius=16, maxRadius=40)
+    text_right_box = pytesseract.image_to_string(thresh, lang='eng', config=config)
+    if text_right_box:
 
-        if circles is not None:
-            # Convert the (x, y) coordinates and radius of the circles to integers
-            circles = np.round(circles[0, :]).astype("int")
+        text = re.sub('[^A-Za-z0-9-%-/]+', ' ', text_right_box).lower()
+        # text = text_right_box
+        # print(text)
+        spotted_strings = []
+        lines = text.split('\n')
+        for line in lines:
 
-            # Loop over the detected circles and draw them
-            for (x, y, r) in circles:
-                cv.circle(gray, (x, y), r, (100, 255, 100), 10)
+            if lines and ' ' in lines[0]:
 
-        cv.imshow('img', gray)
-        cv.waitKey(5)
+                camera.stop()
 
-        if cv.waitKey(1) & 0xFF == ord('q'):
-            camera.stop()
-            new_camera.stop()
-            # break
+                return (f'{lines}')
 
-        if camera:
-            camera.stop()
 
-        if new_camera:
-            new_camera.stop()
-            camera.start()
+if camera.is_capturing:
+    camera.stop()
 
 
 
 
 
-    words = []
-    if case == 'text_filter':
-        text_right_box = pytesseract.image_to_string(thresh, lang='eng', config=config)
-        if text_right_box:
-
-            text = re.sub('[^A-Za-z0-9-%-/]+', ' ', text_right_box).lower()
-            # text = text_right_box
-            # print(text)
-            spotted_strings = []
-            lines = text.split('\n')
-            for line in lines:
-
-                if lines and ' ' in lines[0]:
-
-                    print(f'{lines}')
-
-                    # if (int(len([line for line in lines[0]])) < int(1)):
-
-                        # print(f'CLEANING MORE... {line}')
-
-
-        cv.imshow('img', thresh)
-        cv.waitKey(1)
-
-        if cv.waitKey(1) & 0xFF == ord('q'):
-            camera.stop()
-            new_camera.stop()
-            # break
-
-        if camera:
-            camera.stop()
-
-        if new_camera:
-            new_camera.stop()
-            camera.start()
-
-        # print(int(len(circles)))
-            # plt.imshow(cv.cvtColor(gray, cv.COLOR_BGR2RGB))
-            # plt.show()
-
-        # cv.imshow('img', gray)
-        # cv.waitKey(1)
-        # if cv.waitKey(1) & 0xFF == ord('q'):
-        #     camera.stop()
-        #     new_camera.stop()
-        #     break
-
-        if camera:
-            camera.stop()
-
-        if new_camera:
-            new_camera.stop()
-            camerqqa.start()
-
-
-
-
-
-
-
-            #Create a feature vector
-            # feature_vector = [core_spot_points_fraction, activation_chance_decimal]
-
-    # Feed the feature vector to your model
-    # (You'll need to replace this with your actual model code)
-    # model_output = model.predict(feature_vector)
-    # print (model_output)
-    # return model_output
-
-
-    # cv.imshow('img', img)
-    #
-    # # Break the loop if 'q' key is pressed
-    # if cv.waitKey(1) & 0xFF == ord('q'):
-    #     break
-
-
-
-    cv.destroyAllWindows()
 
 
 
