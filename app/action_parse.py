@@ -1,16 +1,12 @@
 
-import pyautogui
-import time
-from mandala import mandala_node, mandala_message
 
-
-game_name = 'MIRMG(1)'
-
-def dispatch(mandala_action, img):
-        match mandala_action:
-            case "proc_text":
+def dispatch_parse(action_type, message):
+        match action_type:
+            case "invalid node":
                 #     -------------------------- START -----------------------------------
-                print('proc test started')
+                print('node is invalid to level')
+
+
                 return
 
             case "proc_nodes":
