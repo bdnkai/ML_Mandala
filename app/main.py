@@ -6,7 +6,7 @@ if __name__ == '__main__':
 
     # dispatch('sector_left', screen_img)
 
-    position = dispatch('sector_position', screen_img)
+    # dispatch('sector_position', screen_img)
     dispatch('sector_right', screen_img)
 
 

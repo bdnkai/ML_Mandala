@@ -1,10 +1,10 @@
 
 
-def dispatch_parse(action_type, message):
+def dispatch_sector(action_type, message):
         match action_type:
-            case "invalid node":
+            case "title":
                 #     -------------------------- START -----------------------------------
-                print('node is invalid to level')
+                print('title')
 
 
                 return

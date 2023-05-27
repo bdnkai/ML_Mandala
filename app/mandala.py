@@ -99,19 +99,84 @@ def mandala_message(img, location):
     activation_left, activation_top = 25, 150
     activation_right, activation_bottom = (wincap.w - 970), (wincap.h - 280)
 
-    sector_left, sector_top = (wincap.w - (wincap.w - 825)), (wincap.h - (wincap.h - 180))
+    sector_left, sector_top = (wincap.w - (wincap.w - 865)), (wincap.h - (wincap.h - 180))
     sector_right, sector_bottom = (wincap.w - 40), (wincap.h - 10)
 
 
     activation_region = (activation_left, activation_top, activation_right, activation_bottom)
     sector_region = (sector_left, sector_top, sector_right, sector_bottom)
 
+
+
+
     text_camera = camera.start(region=sector_region) if position == 'right' else camera.start(region= activation_region)
     print(f'camera is activated for mandala_text: {camera.is_capturing}')
 
     image = camera.get_latest_frame()
 
-    img = image
+    # Sector Title
+    s1_top, s1_left, s1_right, s1_bottom = 0, 10, 225, 40
+
+    # s2 = Error Message or Stat Type
+    s2_top, s2_left, s2_right, s2_bottom = 40, 10, 274, 80
+
+    # IF Error Message S3 == Stat Type or Stat Value
+    s3_top, s3_left, s3_right, s3_bottom = 80, 10, 276, 100
+
+    # IF Error Message Node Level = 0, always
+
+    # Node_Level
+    s4_top, s4_left, s4_right, s4_bottom = 95, 70 , 160, 125
+
+
+    # coin price
+    # s5_top, s5_left, s5_right, s5_bottom = 330, 120 , 195, 360
+
+    # orb_owned =
+
+
+    # orb price
+    # s5_top, s5_left, s5_right, s5_bottom = 280, 80 , 170, 325
+
+
+    # Activating Chance or Enhance Chance?
+    # s5_top, s5_left, s5_right, s5_bottom = 350, 10 , 240, 375
+
+
+    # S1 = image[s1_top:s1_bottom, s1_left:s1_right]
+    # S2 = image[s2_top:s2_bottom, s2_left:s2_right]
+    # s3 = image[s3_top:s3_bottom, s3_left:s3_right]
+    # s4 = image[s4_top:s4_bottom, s4_left:s4_right]
+    # s5 automatically assume level = 0
+
+
+    # def scenario_norm():
+        # title = S1
+        # stat_type = S2
+        # stat_value = S3
+        # current_node_level = S4
+
+    # def scenario_error():
+        # title = S1
+        # invalid_node_message = S2
+        # stat_type = S3
+        # stat_value = S4
+        # current_node_level = 0
+
+    test_state = image[s5_top:s5_bottom, s5_left:s5_right]
+
+
+
+    test = test_state
+    # while True:
+    cv.imshow('roi', test)
+    cv.waitKey(0)
+
+
+    img = test
+
+
+
 
 
     orig_height, orig_width = img.shape[:2]
@@ -126,11 +191,13 @@ def mandala_message(img, location):
     gray = cv.cvtColor(filtered_img, cv.COLOR_BGR2GRAY)
     thresh = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
 
+
+
     config = '-c char_whitelist= --oem 3 --psm 4'
     text_right_box = pytesseract.image_to_string(gray, lang='eng', config=config)
     if text_right_box:
 
-        text = re.sub('[^A-Za-z0-9-%]+', ' ', text_right_box).lower()
+        text = re.sub('[^A-Za-z0-9-%,]+', ' ', text_right_box).lower()
 
         lines = text.split('\n')
 
@@ -141,10 +208,9 @@ def mandala_message(img, location):
                 camera.stop()
                 for line in lines:
                     print(line)
-                    parsed_message = parse_message(line)
+                    # parsed_message = parse_message(line)
 
-                    print(parsed_message)
-                    # update_data(line, parsed_message)
+
                 camera.stop()
                 return (f'{line}')
 
