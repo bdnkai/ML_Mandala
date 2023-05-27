@@ -7,7 +7,7 @@ import dxcam
 import gym
 from windowcapture import WindowCapture
 from hsv_filter import *
-from mandala_to_csv import parse_message, update_data
+from node_parser import parse_message, update_data
 
 
 
@@ -37,13 +37,12 @@ class Action_State:
 
 camera = dxcam.create(output_idx=0, output_color="BGR")
 
-def mandala_node(img):
+def mandala_node_position(img):
 
 
     mandala_left, mandala_top = (431, 230)
     mandala_right, mandala_bottom = (808, 450)
 
-    # print(mandala_left, mandala_top, mandala_right, mandala_bottom)
     mandala_node_region = (mandala_left, mandala_top , mandala_right , mandala_bottom)
 
     mandala_camera = camera.start(region= mandala_node_region)
@@ -88,92 +87,32 @@ def mandala_node(img):
 
 
 
+def mandala_node_state(img, action):
+    action_type = action
+    print(action_type)
+
+    if action_type != 'node_actions':
+        wincap = WindowCapture(img)
+
+        sector_left, sector_top = (wincap.w - (wincap.w - 835)), (wincap.h - (wincap.h - 180))
+        sector_right, sector_bottom = (wincap.w - 40), (wincap.h - 10)
+        sector_region = (sector_left, sector_top, sector_right, sector_bottom)
+
+        node_camera = camera.start(region=sector_region)
+        print(f'camera is activated for mandala_node_state: {camera.is_capturing}')
+        image = camera.get_latest_frame()
 
 
-words = []
-def mandala_message(img, location):
-    position = location
-
-    wincap = WindowCapture(img)
-
-    activation_left, activation_top = 25, 150
-    activation_right, activation_bottom = (wincap.w - 970), (wincap.h - 280)
-
-    sector_left, sector_top = (wincap.w - (wincap.w - 865)), (wincap.h - (wincap.h - 180))
-    sector_right, sector_bottom = (wincap.w - 40), (wincap.h - 10)
+    if action_type == 'fetch_current_node_image':
+        camera.stop()
+        return image
 
 
-    activation_region = (activation_left, activation_top, activation_right, activation_bottom)
-    sector_region = (sector_left, sector_top, sector_right, sector_bottom)
+    if action_type == 'node_actions':
+        image = img
 
+    img = image
 
-
-
-    text_camera = camera.start(region=sector_region) if position == 'right' else camera.start(region= activation_region)
-    print(f'camera is activated for mandala_text: {camera.is_capturing}')
-
-    image = camera.get_latest_frame()
-
-    # Sector Title
-    s1_top, s1_left, s1_right, s1_bottom = 0, 10, 225, 40
-
-    # s2 = Error Message or Stat Type
-    s2_top, s2_left, s2_right, s2_bottom = 40, 10, 274, 80
-
-    # IF Error Message S3 == Stat Type or Stat Value
-    s3_top, s3_left, s3_right, s3_bottom = 80, 10, 276, 100
-
-    # IF Error Message Node Level = 0, always
-
-    # Node_Level
-    s4_top, s4_left, s4_right, s4_bottom = 95, 70 , 160, 125
-
-
-    # coin price
-    # s5_top, s5_left, s5_right, s5_bottom = 330, 120 , 195, 360
-
-    # orb_owned =
-
-
-    # orb price
-    # s5_top, s5_left, s5_right, s5_bottom = 280, 80 , 170, 325
-
-
-    # Activating Chance or Enhance Chance?
-    # s5_top, s5_left, s5_right, s5_bottom = 350, 10 , 240, 375
-
-
-    # S1 = image[s1_top:s1_bottom, s1_left:s1_right]
-    # S2 = image[s2_top:s2_bottom, s2_left:s2_right]
-    # s3 = image[s3_top:s3_bottom, s3_left:s3_right]
-    # s4 = image[s4_top:s4_bottom, s4_left:s4_right]
-    # s5 automatically assume level = 0
-
-
-    # def scenario_norm():
-        # title = S1
-        # stat_type = S2
-        # stat_value = S3
-        # current_node_level = S4
-
-    # def scenario_error():
-        # title = S1
-        # invalid_node_message = S2
-        # stat_type = S3
-        # stat_value = S4
-        # current_node_level = 0
-
-    test_state = image[s5_top:s5_bottom, s5_left:s5_right]
-
-
-
-    test = test_state
-    # while True:
-    cv.imshow('roi', test)
-    cv.waitKey(0)
-
-
-    img = test
 
 
 
@@ -191,6 +130,68 @@ def mandala_message(img, location):
     gray = cv.cvtColor(filtered_img, cv.COLOR_BGR2GRAY)
     thresh = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
 
+
+
+    config = '-c char_whitelist= --oem 3 --psm 4'
+    text_right_box = pytesseract.image_to_string(gray, lang='eng', config=config)
+    if text_right_box:
+
+        text = re.sub('[^A-Za-z0-9-,%]+', ' ', text_right_box).lower()
+
+        lines = text.split('\n')
+
+        for line in lines:
+
+            if lines and ' ' in lines[0]:
+
+                camera.stop()
+                for line in lines:
+                    print(line)
+                    # parsed_message = parse_message(line)
+                    os_read = f'{line}'
+
+
+                camera.stop()
+                return (f'{line}')
+
+
+
+
+
+
+
+
+words = []
+
+def mandala_ring_state(img):
+
+    wincap = WindowCapture(img)
+
+    activation_left, activation_top = 25, 150
+    activation_right, activation_bottom = (wincap.w - 970), (wincap.h - 280)
+    activation_region = (activation_left, activation_top, activation_right, activation_bottom)
+
+    ring_camera = camera.start(region= activation_region)
+
+
+    print(f'camera is activated for mandala_ring_state: {camera.is_capturing}')
+
+    image = camera.get_latest_frame()
+
+    img = image
+
+
+    orig_height, orig_width = img.shape[:2]
+    fixed_width = 1200
+    ratio = fixed_width / float(orig_width)
+    fixed_height = int(orig_height * ratio)
+    img = cv.resize(img, (fixed_width, fixed_height))
+
+    hsv_filter = get_hsv_filter_from_controls('mandala_messages')
+    filtered_img = apply_hsv_filter(img, hsv_filter=hsv_filter)
+
+    gray = cv.cvtColor(filtered_img, cv.COLOR_BGR2GRAY)
+    thresh = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
 
 
     config = '-c char_whitelist= --oem 3 --psm 4'

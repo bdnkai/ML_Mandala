@@ -4,8 +4,7 @@ import csv
 def parse_message(message):
     data = []
     # Split the message into words
-    if "previous mandala has not been activated yet" in message:
-        pass
+
     words = message.split()
     ring = words[0]
     sector = words[2]

@@ -1,4 +1,4 @@
-from actions import dispatch, game_name
+from mandala_actions import dispatch, game_name
 
 if __name__ == '__main__':
 
@@ -7,11 +7,9 @@ if __name__ == '__main__':
     # dispatch('sector_left', screen_img)
 
     # dispatch('sector_position', screen_img)
-    dispatch('sector_right', screen_img)
+    dispatch('node_sector', screen_img)
 
 
 
 
-    # dispatch('proc_text', screen_img)
 
-    # dispatch('proc_nodes', screen_img)
