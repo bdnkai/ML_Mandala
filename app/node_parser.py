@@ -1,69 +1,103 @@
 import csv
 
 
-def parse_message(message):
-    data = []
-    # Split the message into words
+def parse_message(node_info, state):
 
-    words = message.split()
-    ring = words[0]
-    sector = words[2]
-    node_title = f'{words[3]} { words[4]}'
-    stat_type = f'{words[5]}'
-    stat_value = words[6]
-    level = words[7][0]
-    required_dragon_orbs = words[12]
-    required_coins = f'{words[15]}{words[16]}'
+    state = state
+    if state == 'unlocked':
+        sector_info = node_info
+        for info in sector_info:
+            if info == 'stat_type':
+                pass
+            else:
+                sector_info[info] = [word for word in sector_info[info].split(' ') if word]
 
-    # Return the information as a dictionary
-    return {
-        "Ring": ring,
-        "Sector": sector,
-        "Node Title": node_title,
-        "Stat Type": stat_type,
-        "Stat Value": stat_value,
-        "Level": level,
-        "Required Dragon Orbs": required_dragon_orbs,
-        "Required Coins": required_coins
-    }
+        title = sector_info['title']
+        stat_type = sector_info['stat_type']
+        stat_value = sector_info['stat_value']
+        current_node_level = sector_info['node_level']
+        coin_price = sector_info['coin_price']
+        orb_price = sector_info['orb_price']
+        success_chance = sector_info['success_chance']
+        coin_value = (int(len(coin_price) - 1))
 
-def update_data(data, parsed_message):
-    # Check if this node already exists in the data
-    existing_node = next((item for item in data if item["Node Title"] == parsed_message["Node Title"]), None)
 
-    if existing_node is None:
-        # This is a new node, so create a new dictionary for it
-        node_data = {
-            "Ring": parsed_message["Ring"],
-            "Sector": parsed_message["Sector"],
-            "Node Title": parsed_message["Node Title"],
-            # Initialize the levels with placeholder values
-            "Level 1": None,
-            "Level 2": None,
-            "Level 3": None,
-            "Level 4": None,
-            "Level 5": None,
-            "Required Dragon Orbs": parsed_message["Required Dragon Orbs"],
-            "Required Coins": parsed_message["Required Coins"]
+        ring = title[0]
+        sector = title[2]
+        node_title = f'{title[3]} {title[4]}' if len(title) >= 4 else f'{title[3]}'
+        stat_type = stat_type
+        stat_value = stat_value[0]
+        node_level = current_node_level[0]
+        coin_price = coin_price[coin_value]
+        orb_price = orb_price[1] if len(orb_price) > 0 else orb_price[1]
+        success_type = success_chance[0]
+        success_chance = success_chance[3]
+
+
+        return {
+            "Ring": ring,
+            "Sector": sector,
+            "Node Title": node_title,
+            "Stat Type": stat_type,
+            "Stat Value": stat_value,
+            "Level": node_level,
+            "Required Dragon Orbs": orb_price,
+            "Required Coins": coin_price,
+            'Success Type': success_type,
+            'Success Chance': success_chance
         }
-        data.append(node_data)
-    else:
-        # This node already exists, so update the existing dictionary
-        node_data = existing_node
 
-    # Update the level information
-    node_data[f"Level {parsed_message['Level']}"] = parsed_message["Stat Value"]
+    if state == 'locked':
+        print('locked')
 
-    # Your data
+        data = []
+        sector_info = node_info
+        for info in sector_info:
+            if info == 'invalid_stat_type' or info == 'invalid_node':
+                pass
+            else:
+                sector_info[info] = [word for word in sector_info[info].split(' ') if word]
 
+        title = sector_info['title']
+        stat_type = sector_info['invalid_stat_type']
+        stat_value = sector_info['invalid_stat_value']
+        current_node_level = 0
+        coin_price = sector_info['coin_price']
+        orb_price = sector_info['orb_price']
+        success_chance = sector_info['success_chance']
+        coin_value = (int(len(coin_price) - 1))
 
-    # Column headers
-    headers = ["Ring", "Sector", "Node Title", "Stat Type", "Level 1", "Level 2", "Level 3", "Level 4", "Level 5",
-               "Required Dragon Orbs", "Required Coins"]
+        ring = title[0]
+        sector = title[2]
+        node_title = f'{title[3]} {title[4]}' if len(title) >= 4 else f'{title[3]}'
+        stat_type = stat_type
+        stat_value = stat_value[0]
+        node_level = current_node_level
+        coin_price = coin_price[coin_value]
+        orb_price = orb_price[1]
+        success_type = success_chance[0]
+        success_chance = success_chance[2] if success_chance[0] == 'activation' else success_chance[3]
 
+        # print(ring)
+        # print(sector)
+        # print(node_title)
+        # print(stat_type)
+        # print(stat_value)
+        # print(node_level)
+        # print(coin_price)
+        # print(orb_price)
+        # print(success_type)
+        # print(success_chance)
 
-    # Write data to CSV file
-    with open("data.csv", "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(headers)
-        writer.writerows(data)
+        return {
+            "Ring": ring,
+            "Sector": sector,
+            "Node Title": node_title,
+            "Stat Type": stat_type,
+            "Stat Value": stat_value,
+            "Level": node_level,
+            "Required Dragon Orbs": orb_price,
+            "Required Coins": coin_price,
+            'Success Type': success_type,
+            'Success Chance': success_chance
+        }
