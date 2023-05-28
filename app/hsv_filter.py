@@ -29,8 +29,6 @@ def get_hsv_filter_from_controls(scenario):
 
 
     if scenario == 'mandala_messages':
-        print('HSV for TEXT pulling ACTIVATED')
-
         hsv_filter.hMin = 0
         hsv_filter.sMin = 0
         hsv_filter.vMin = 133
@@ -45,9 +43,6 @@ def get_hsv_filter_from_controls(scenario):
         return hsv_filter
 
     if scenario == 'mandala_middle':
-
-        print('HSV for NODE pulling ACTIVATED')
-        # circle filtering
         hsv_filter.hMin = 0
         hsv_filter.sMin = 58
         hsv_filter.vMin = 0

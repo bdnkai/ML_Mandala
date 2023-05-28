@@ -1,4 +1,4 @@
-from actions import dispatch, game_name
+from mandala_actions import dispatch, game_name
 
 if __name__ == '__main__':
 
@@ -6,12 +6,11 @@ if __name__ == '__main__':
 
     # dispatch('sector_left', screen_img)
 
-    position = dispatch('sector_position', screen_img)
-    dispatch('sector_right', screen_img)
+    found_position = dispatch('sector_position', screen_img)
+    click = dispatch('select_node', found_position)
+    if found_position:
+        wow = dispatch('node_sector', screen_img)
 
 
 
 
-    # dispatch('proc_text', screen_img)
-
-    # dispatch('proc_nodes', screen_img)
