@@ -1,7 +1,15 @@
-from mandala import process_screen, game_name
+from mandala_actions import dispatch, game_name
 
 if __name__ == '__main__':
 
     screen_img = game_name
 
-    process_screen(screen_img)
+    # dispatch('sector_left', screen_img)
+
+    # dispatch('sector_position', screen_img)
+    dispatch('node_sector', screen_img)
+
+
+
+
+
