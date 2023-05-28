@@ -147,6 +147,10 @@ def mandala_node_state(img, action):
     thresh = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
 
 
+        self.proccessing = True if self.get_probability and self.get_sector_info and self.get_sector_position == True else False
+        self.ready = True if self.proccessing == False else True
+        self.probability_finished = False
+        self. sector_finished = False
 
     config = '-c char_whitelist= --oem 3 --psm 4'
     text_right_box = pytesseract.image_to_string(gray, lang='eng', config=config)
@@ -172,9 +176,24 @@ def mandala_node_state(img, action):
 
 
 
+    orig_height, orig_width = img.shape[:2]
+    fixed_width = orig_width
+    ratio = fixed_width / float(orig_width)
+    fixed_height = int(orig_height * ratio)
+    img = cv.resize(img, (fixed_width, fixed_height))
 
 
 
+    if circles is not None:
+        circles = np.round(circles[0, :]).astype("int")
+        positions = []
+        for (x, y, r) in circles:
+            cv.circle(img, (x , y), r, (100, 255, 100), 2)
+            cv_x, cv_y = x, y
+            screen_x = region_x + cv_x
+            screen_y = region_y + cv_y
+            positions.append((screen_x, screen_y))
+        camera.stop()
 
 
 words = []
@@ -189,6 +208,15 @@ def mandala_ring_state(img):
 
     ring_camera = camera.start(region= activation_region)
 
+    if action_type == 'node_actions':
+        image = img
+        pass
+    img = image
+    orig_height, orig_width = img.shape[:2]
+    fixed_width = 1200
+    ratio = fixed_width / float(orig_width)
+    fixed_height = int(orig_height * ratio)
+    img = cv.resize(img, (fixed_width, fixed_height))
 
     print(f'camera is activated for mandala_ring_state: {camera.is_capturing}')
 
