@@ -79,6 +79,19 @@ def mandala_node_position(img):
         return positions
 
 
+def assign(vision_image_file, name,  threshold):
+    # sends adjusted img dimension to Vision Module
+        adjusted_vision_image = Vision(vision_image_file)
+        image_data = adjusted_vision_image
+
+    # returns the (x, y) location at which the image is found
+        tap_location = image_data.find( screenshot, threshold, 'points')
+
+        if tap_location is not None:
+                tap(device, tap_location)
+
+
+
 
 def mandala_node_state(img, action):
     action_type = action
@@ -96,11 +109,12 @@ def mandala_node_state(img, action):
         return image
 
     if action_type == 'node_actions':
-        image = img
         pass
+        image = img
+
     img = image
     orig_height, orig_width = img.shape[:2]
-    fixed_width = 1280
+    fixed_width = 700
     ratio = fixed_width / float(orig_width)
     fixed_height = int(orig_height * ratio)
     img = cv.resize(img, (fixed_width, fixed_height))
@@ -110,6 +124,7 @@ def mandala_node_state(img, action):
 
     gray = cv.cvtColor(filtered_img, cv.COLOR_BGR2GRAY)
     thresh = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
+
 
     config = '-c char_whitelist= --oem 3 --psm 4'
     text_right_box = pytesseract.image_to_string(gray, lang='eng', config=config)
@@ -122,6 +137,9 @@ def mandala_node_state(img, action):
                     os_read = f'{line}'
                 camera.stop()
                 return os_read
+
+    if camera.is_capturing:
+        camera.stop()
 
 
 def mandala_ring_state(img):
