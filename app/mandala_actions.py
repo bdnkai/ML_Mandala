@@ -5,7 +5,6 @@ import concurrent.futures
 from node_parser import parse_message
 from mandala import mandala_node_position, mandala_node_state, mandala_ring_state
 from node_actions import dispatch_node
-import cv2 as cv
 
 game_name = 'MIRMG(1)'
 
@@ -29,13 +28,15 @@ def dispatch(mandala_action, img):
         case "select_node":
             positions = img
             print(f'Clicking Sector... {positions[0]}')
+            time.sleep(1)
+
             pyautogui.click(positions[0])
             time.sleep(1)
             return
 
         case "node_sector":
             node_status, node_image = dispatch('node_status', img)
-            sector_node = dispatch('sector_unlocked', node_image) if node_status == True else dispatch('sector_locked', node_image) if node_status == False else None
+            sector_node = dispatch('sector_unlocked', node_image) if node_status == True else dispatch('sector_locked', node_image) if node_status == False else ''
             return sector_node
 
         case "sector_unlocked":
@@ -50,7 +51,6 @@ def dispatch(mandala_action, img):
                 sec = futures[f]
                 sector_info[sec] = f.result()
             parsed_message = parse_message(sector_info,'unlocked')
-            print([parsed_message])
             return parsed_message
 
         case "sector_locked":
@@ -65,16 +65,19 @@ def dispatch(mandala_action, img):
                 sec = futures[f]
                 sector_info[sec] = f.result()
             parsed_message = parse_message(sector_info, 'locked')
-            print([parsed_message])
-
             return parsed_message
 
         case "node_status":
             node_image = mandala_node_state(img, 'fetch_current_node_image')
             status = mandala_node_state(img, 'fetch_current_node_status')
+            if "activation" or "enhance":
+
+                print('lol')
+                return True, node_image
             if "previous mandala has not been activated yet" in status:
                 return False, node_image
-            return True, node_image
+            else:
+                return f'something is wrong'
 
 
         case default:

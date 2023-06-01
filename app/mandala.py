@@ -40,8 +40,8 @@ camera = dxcam.create(output_idx=0, output_color="BGR")
 
 def mandala_node_position(img):
 
-    mandala_left, mandala_top = (300, 430)
-    mandala_right, mandala_bottom = (708, 520)
+    mandala_left, mandala_top = (385, 320)
+    mandala_right, mandala_bottom = (830, 560)
 
     mandala_node_region = (mandala_left, mandala_top , mandala_right , mandala_bottom)
 
@@ -74,8 +74,8 @@ def mandala_node_position(img):
             screen_x = region_x + cv_x
             screen_y = region_y + cv_y
             positions.append((screen_x, screen_y))
-        camera.stop()
 
+        camera.stop()
         return positions
 
 
@@ -100,7 +100,7 @@ def mandala_node_state(img, action):
         pass
     img = image
     orig_height, orig_width = img.shape[:2]
-    fixed_width = 1200
+    fixed_width = 1280
     ratio = fixed_width / float(orig_width)
     fixed_height = int(orig_height * ratio)
     img = cv.resize(img, (fixed_width, fixed_height))
