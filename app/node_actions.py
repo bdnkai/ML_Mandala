@@ -1,5 +1,5 @@
 
-
+import cv2 as cv
 def dispatch_node(action_type, image):
         match action_type:
             case "title":
@@ -8,12 +8,12 @@ def dispatch_node(action_type, image):
                 return sector1_section
 
             case "stat_type":
-                s2_top, s2_left, s2_right, s2_bottom = 40, 10, 274, 80
+                s2_top, s2_left, s2_right, s2_bottom = 40, 10, 264, 80
                 sector2_section = image[s2_top:s2_bottom, s2_left:s2_right]
                 return sector2_section
 
             case "stat_value":
-                s3_top, s3_left, s3_right, s3_bottom = 80, 10, 276, 100
+                s3_top, s3_left, s3_right, s3_bottom = 70, 10, 264, 108
                 sector3_section = image[s3_top:s3_bottom, s3_left:s3_right]
                 return sector3_section
 
@@ -31,10 +31,11 @@ def dispatch_node(action_type, image):
             case "invalid_stat_type":
                 s3_top, s3_left, s3_right, s3_bottom = 80, 10, 276, 100
                 sector6_section = image[s3_top:s3_bottom, s3_left:s3_right]
+
                 return sector6_section
 
             case "invalid_stat_value":
-                s4_top, s4_left, s4_right, s4_bottom = 95, 70, 160, 125
+                s4_top, s4_left, s4_right, s4_bottom = 85, 10, 255, 120
                 sector7_section = image[s4_top:s4_bottom, s4_left:s4_right]
                 return sector7_section
 
