@@ -1,5 +1,5 @@
 import csv
-
+import time
 
 def parse_message(node_info, state):
 
@@ -10,6 +10,7 @@ def parse_message(node_info, state):
             if info == 'stat_type':
                 pass
             else:
+
                 sector_info[info] = [word for word in sector_info[info].split(' ') if word]
 
         title = sector_info['title']
@@ -31,8 +32,18 @@ def parse_message(node_info, state):
         coin_price = coin_price[coin_value]
         orb_price = orb_price[1] if len(orb_price) > 0 else orb_price[1]
         success_type = success_chance[0]
-        success_chance = success_chance[3]
+        success_chance = success_chance[2]
 
+        print(ring)
+        print(sector)
+        print(node_title)
+        print(stat_type)
+        print(stat_value)
+        print(node_level)
+        print(coin_price)
+        print(orb_price)
+        print(success_type)
+        print(success_chance)
 
         return {
             "Ring": ring,
@@ -78,16 +89,16 @@ def parse_message(node_info, state):
         success_type = success_chance[0]
         success_chance = success_chance[2] if success_chance[0] == 'activation' else success_chance[3]
 
-        # print(ring)
-        # print(sector)
-        # print(node_title)
-        # print(stat_type)
-        # print(stat_value)
-        # print(node_level)
-        # print(coin_price)
-        # print(orb_price)
-        # print(success_type)
-        # print(success_chance)
+        print(ring)
+        print(sector)
+        print(node_title)
+        print(stat_type)
+        print(stat_value)
+        print(node_level)
+        print(coin_price)
+        print(orb_price)
+        print(success_type)
+        print(success_chance)
 
         return {
             "Ring": ring,
