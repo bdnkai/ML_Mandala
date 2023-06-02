@@ -10,7 +10,7 @@ def parse_message(node_info, state):
             if info == 'stat_type':
                 pass
             else:
-                sector_info[info] = [word for word in sector_info[info].split(' ') if word is not None]
+                sector_info[info] = [word for word in sector_info[info].split(' ')]
 
         title = sector_info['title']
         stat_type = sector_info['stat_type']
@@ -67,7 +67,9 @@ def parse_message(node_info, state):
             if info == 'invalid_stat_type':
                 pass
             else:
-                sector_info[info] = [word for word in sector_info[info].split(' ') if word is not None]
+                sector_info[info] = [word for word in sector_info[info].split(' ')]
+
+
 
         title = sector_info['title']
         stat_type = sector_info['invalid_stat_type']

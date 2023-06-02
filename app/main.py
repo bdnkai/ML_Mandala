@@ -1,17 +1,20 @@
-from mandala_actions import dispatch, game_name
+from mandala_actions import dispatch, get_variable
 
 if __name__ == '__main__':
 
-    screen_img = game_name
+    # captured_img = application_name
+    application, a_unlock, a_lock, e_unlock, e_lock = get_variable()
+
+
 
     # dispatch('get_ring_information', screen_img)
 
-    # found_position = dispatch('find_node_position', screen_img)
+    # found_position = dispatch('find_node_position', application)
 
     # click = dispatch('select_node_position', found_position)
     # if found_position:
 
-    dispatch('get_node_information', screen_img)
-
+    message =dispatch('get_node_information', application)
+    print(message)
 
 

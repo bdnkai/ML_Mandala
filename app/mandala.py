@@ -118,13 +118,15 @@ def mandala_node_state(img, action):
     ratio = fixed_width / float(orig_width)
     fixed_height = int(orig_height * ratio)
     img = cv.resize(img, (fixed_width, fixed_height))
+    while True:
+        cv.imshow('img', img)
+        cv.waitKey(0)
 
     hsv_filter = get_hsv_filter_from_controls('mandala_messages')
     filtered_img = apply_hsv_filter(img, hsv_filter=hsv_filter)
 
     gray = cv.cvtColor(filtered_img, cv.COLOR_BGR2GRAY)
     thresh = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
-
 
     config = '-c char_whitelist= --oem 3 --psm 4'
     text_right_box = pytesseract.image_to_string(gray, lang='eng', config=config)

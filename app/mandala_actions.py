@@ -5,8 +5,20 @@ import concurrent.futures
 from node_parser import parse_message
 from mandala import mandala_node_position, mandala_node_state, mandala_ring_state
 from node_actions import dispatch_node
+from dotenv import load_dotenv
+import os
 
-game_name = 'MIRMG(1)'
+
+def get_variable():
+    load_dotenv('../.env')
+    application_name = os.getenv("APP_NAME")
+    a_locked = os.getenv("AL_PATH")
+    e_locked = os.getenv("EL_PATH")
+    a_unlocked = os.getenv("AU_PATH")
+    e_unlocked = os.getenv("EU_PATH")
+    return application_name, a_unlocked, a_locked, e_unlocked, e_locked
+
+
 
 def dispatch(mandala_action, img):
     def node_img_parser(roi, img):
@@ -41,7 +53,7 @@ def dispatch(mandala_action, img):
 
         case "get_node_information":
             node_status, node_image = dispatch('node_status', img)
-            sector_node = dispatch('sector_unlocked', node_image) if node_status == True else dispatch('sector_locked', node_image) if node_status == False else ''
+            sector_node = dispatch('sector_unlocked', node_image) if node_status == True else dispatch('sector_locked', node_image) if node_status == False else print('SOMETHINGS WRONG')
             return sector_node
 
         case "sector_unlocked":
@@ -71,11 +83,12 @@ def dispatch(mandala_action, img):
                 for section in sections:
                     future = executor.submit(node_img_parser, roi=section, img=img)
                     futures[future] = section
-
             for f in concurrent.futures.as_completed(futures):
                 sec = futures[f]
                 sector_info[sec] = f.result()
+                print(sector_info[sec])
             parsed_message = parse_message(sector_info, 'locked')
+
             return parsed_message
 
         case "node_status":
