@@ -8,6 +8,9 @@ import gym
 from windowcapture import WindowCapture
 from hsv_filter import *
 from node_parser import parse_message
+from pywinauto.application import Application
+
+
 
 
 
@@ -80,21 +83,35 @@ def mandala_node_position(img):
 
 
 def assign(vision_image_file, name,  threshold):
+    # Connect to the application
+    app = Application().connect(title="Your Window Title")
+
+    # Get the window
+    window = app.window(title="Your Window Title")
+
+    # Get the window's rectangle
+    rect = window.rectangle()
+
+    # Print the size and position
+    print(f"Left: {rect.left}, Top: {rect.top}, Right: {rect.right}, Bottom: {rect.bottom}")
+    print(f"Width: {rect.width()}, Height: {rect.height()}")
+
     # sends adjusted img dimension to Vision Module
-        adjusted_vision_image = Vision(vision_image_file)
-        image_data = adjusted_vision_image
+    adjusted_vision_image = Vision(vision_image_file)
+    image_data = adjusted_vision_image
 
     # returns the (x, y) location at which the image is found
-        tap_location = image_data.find( screenshot, threshold, 'points')
+    tap_location = image_data.find( screenshot, threshold, 'points')
 
-        if tap_location is not None:
-                tap(device, tap_location)
+    # if tap_location is not None:
+    #         tap(device, tap_location)
 
 
 
 
 def mandala_node_state(img, action):
     action_type = action
+    print(action_type)
 
     if action_type != 'node_actions':
         wincap = WindowCapture(img)
@@ -105,6 +122,14 @@ def mandala_node_state(img, action):
         image = camera.get_latest_frame()
 
     if action_type == 'fetch_current_node_image':
+        img = camera.get_latest_frame()
+        orig_height, orig_width = img.shape[:2]
+        fixed_width = 500
+        ratio = fixed_width / float(orig_width)
+        fixed_height = int(orig_height * ratio)
+        img = cv.resize(img, (fixed_width, fixed_height))
+        cv.imshow('img',img)
+
         camera.stop()
         return image
 
@@ -113,14 +138,14 @@ def mandala_node_state(img, action):
         image = img
 
     img = image
-    orig_height, orig_width = img.shape[:2]
-    fixed_width = 700
-    ratio = fixed_width / float(orig_width)
-    fixed_height = int(orig_height * ratio)
-    img = cv.resize(img, (fixed_width, fixed_height))
-    while True:
-        cv.imshow('img', img)
-        cv.waitKey(0)
+    # orig_height, orig_width = img.shape[:2]
+    # fixed_width = 400
+    # ratio = fixed_width / float(orig_width)
+    # fixed_height = int(orig_height * ratio)
+    # img = cv.resize(img, (fixed_width, fixed_height))
+    # while True:
+    #     cv.imshow('img', img)
+    #     cv.waitKey(0)
 
     hsv_filter = get_hsv_filter_from_controls('mandala_messages')
     filtered_img = apply_hsv_filter(img, hsv_filter=hsv_filter)

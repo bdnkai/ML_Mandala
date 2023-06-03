@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 import os
 
 
+load_dotenv('../.env')
 def get_variable():
-    load_dotenv('../.env')
     application_name = os.getenv("APP_NAME")
     a_locked = os.getenv("AL_PATH")
     e_locked = os.getenv("EL_PATH")
