@@ -83,18 +83,7 @@ def mandala_node_position(img):
 
 
 def assign(vision_image_file, name,  threshold):
-    # Connect to the application
-    app = Application().connect(title="Your Window Title")
 
-    # Get the window
-    window = app.window(title="Your Window Title")
-
-    # Get the window's rectangle
-    rect = window.rectangle()
-
-    # Print the size and position
-    print(f"Left: {rect.left}, Top: {rect.top}, Right: {rect.right}, Bottom: {rect.bottom}")
-    print(f"Width: {rect.width()}, Height: {rect.height()}")
 
     # sends adjusted img dimension to Vision Module
     adjusted_vision_image = Vision(vision_image_file)
@@ -103,69 +92,86 @@ def assign(vision_image_file, name,  threshold):
     # returns the (x, y) location at which the image is found
     tap_location = image_data.find( screenshot, threshold, 'points')
 
-    # if tap_location is not None:
-    #         tap(device, tap_location)
 
 
+def get_window(app_name):
+    # Connect to the application
+    app = Application().connect(title=app_name)
+
+    # Get the window
+    window = app.window(title=app_name)
+
+    # Get the window's rectangle
+    rect = window.rectangle()
+
+    return rect
 
 
-def mandala_node_state(img, action):
+def mandala_node_state(app_name, action):
     action_type = action
-    print(action_type)
 
-    if action_type != 'node_actions':
-        wincap = WindowCapture(img)
-        sector_left, sector_top = (wincap.w - (wincap.w - 835)), (wincap.h - (wincap.h - 180))
-        sector_right, sector_bottom = (wincap.w - 40), (wincap.h - 10)
-        sector_region = (sector_left, sector_top, sector_right, sector_bottom)
-        node_camera = camera.start(region=sector_region)
-        image = camera.get_latest_frame()
+
 
     if action_type == 'fetch_current_node_image':
-        img = camera.get_latest_frame()
-        orig_height, orig_width = img.shape[:2]
-        fixed_width = 500
-        ratio = fixed_width / float(orig_width)
-        fixed_height = int(orig_height * ratio)
-        img = cv.resize(img, (fixed_width, fixed_height))
-        cv.imshow('img',img)
+        rect = get_window(app_name=app_name)
+        width = rect.width()
+        height = rect.height()
 
-        camera.stop()
+        print(f"Left: {rect.left}, Top: {rect.top}, Right: {rect.right}, Bottom: {rect.bottom}")
+        print(f"Width: {rect.width()}, Height: {rect.height()}")
+
+        sector_left, sector_top = (rect.width() - (rect.width() - 835)), (rect.height() - (rect.height() - 180))
+        sector_right, sector_bottom = (rect.width() - 40), (rect.height() - 10)
+        sector_region = (sector_left, sector_top, sector_right, sector_bottom)
+        node_camera = camera.start(region=sector_region)
+
+        print(sector_region)
+
+        image = camera.get_latest_frame()
+
+        if camera.start:
+            camera.stop()
+
         return image
 
-    if action_type == 'node_actions':
+    if action_type == 'split_node' or action_type == 'fetch_current_node_status' or action_type != 'fetch_current_node_image':
         pass
-        image = img
+        img = app_name
 
-    img = image
-    # orig_height, orig_width = img.shape[:2]
-    # fixed_width = 400
-    # ratio = fixed_width / float(orig_width)
-    # fixed_height = int(orig_height * ratio)
-    # img = cv.resize(img, (fixed_width, fixed_height))
-    # while True:
-    #     cv.imshow('img', img)
-    #     cv.waitKey(0)
+
+    orig_height, orig_width = img.shape[:2]
+    fixed_width = 600
+    ratio = fixed_width / float(orig_width)
+    fixed_height = int(orig_height * ratio)
+    img = cv.resize(img, (fixed_width, fixed_height))
+
+    print({f'{action_type}:OH: {orig_height}, OW:{orig_width}'})
+    print(f'{action_type}: FH{fixed_height}, FW{fixed_width}')
+    # if(action == 'split_node'):
+    #     while True:
+    #         cv.imshow('img', img)
+    #         cv.waitKey(1)
 
     hsv_filter = get_hsv_filter_from_controls('mandala_messages')
     filtered_img = apply_hsv_filter(img, hsv_filter=hsv_filter)
 
     gray = cv.cvtColor(filtered_img, cv.COLOR_BGR2GRAY)
     thresh = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
-
     config = '-c char_whitelist= --oem 3 --psm 4'
     text_right_box = pytesseract.image_to_string(gray, lang='eng', config=config)
     if text_right_box:
-        text = re.sub('[^A-Za-z0-9-,%]+', ' ', text_right_box).lower()
+        text = re.sub('[^A-Za-z0-9-.,%]+', ' ', text_right_box).lower()
         lines = text.split('\n')
         for line in lines:
             if lines and ' ' in lines[0]:
                 for line in lines:
                     os_read = f'{line}'
-                camera.stop()
+                if camera.start:
+                    camera.stop()
+
                 return os_read
 
-    if camera.is_capturing:
+    if camera.start:
         camera.stop()
 
 
@@ -201,12 +207,14 @@ def mandala_ring_state(img):
                 for line in lines:
                     os_read = f'{line}'
                     return os_read
-                camera.stop()
+                if camera.start:
+                    camera.stop()
+
                 return os_read
 
-
-if camera.is_capturing:
+if camera.start:
     camera.stop()
+
 
 
 

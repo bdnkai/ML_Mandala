@@ -4,7 +4,7 @@ import time
 import concurrent.futures
 from node_parser import parse_message
 from mandala import mandala_node_position, mandala_node_state, mandala_ring_state
-from node_actions import dispatch_node
+from node_actions import dispatch_split_node
 from dotenv import load_dotenv
 import os
 
@@ -22,7 +22,7 @@ def get_variable():
 
 def dispatch(mandala_action, img):
     def node_img_parser(roi, img):
-        result = mandala_node_state(dispatch_node(roi, img), 'node_actions')
+        result = mandala_node_state(dispatch_split_node(roi, img), f'{roi}')
         return result
 
     match mandala_action:
@@ -93,7 +93,7 @@ def dispatch(mandala_action, img):
 
         case "node_status":
             node_image = mandala_node_state(img, 'fetch_current_node_image')
-            status = mandala_node_state(img, 'fetch_current_node_status')
+            status = mandala_node_state(node_image, 'fetch_current_node_status')
 
             if "previous mandala has not been activated yet" in status:
                 return False, node_image
