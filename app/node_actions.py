@@ -3,6 +3,8 @@ import cv2 as cv
 def dispatch_split_node(action_type, image):
         match action_type:
             case "title":
+
+
                 s1_top, s1_left, s1_right, s1_bottom = 0, 10, 245, 40
                 sector1_section = image[s1_top:s1_bottom, s1_left:s1_right]
                 return sector1_section
@@ -13,14 +15,14 @@ def dispatch_split_node(action_type, image):
                 return sector2_section
 
             case "stat_value":
-                s3_top, s3_left, s3_right, s3_bottom = 70, 20, 260, 105
+                s3_top, s3_left, s3_right, s3_bottom = 75, 40, 240, 105
                 sector3_section = image[s3_top:s3_bottom, s3_left:s3_right]
+
                 return sector3_section
 
             case "node_level":
                 s4_top, s4_left, s4_right, s4_bottom = 95, 70, 160, 125
                 sector4_section = image[s4_top:s4_bottom, s4_left:s4_right]
-
                 return sector4_section
 
             case "invalid_node":
@@ -30,7 +32,7 @@ def dispatch_split_node(action_type, image):
                 return sector5_section
 
             case "invalid_stat_type":
-                s3_top, s3_left, s3_right, s3_bottom = 70, 10, 276, 95
+                s3_top, s3_left, s3_right, s3_bottom = 75, 60, 220, 100
                 sector6_section = image[s3_top:s3_bottom, s3_left:s3_right]
                 return sector6_section
 
@@ -42,7 +44,9 @@ def dispatch_split_node(action_type, image):
             case "coin_price":
                 s5_top, s5_left, s5_right, s5_bottom = 325, 20, 260, 355
                 sector8_section = image[s5_top:s5_bottom, s5_left:s5_right]
-
+                # while True:
+                #     cv.imshow('i', sector8_section)
+                #     cv.waitKey(1)
                 return sector8_section
 
             case "orb_price":
@@ -53,9 +57,7 @@ def dispatch_split_node(action_type, image):
             case "success_chance":
                 s7_top, s7_left, s7_right, s7_bottom = 350, 10, 260, 375
                 sector0_section = image[s7_top:s7_bottom, s7_left:s7_right]
-                # while True:
-                #     cv.imshow('i', sector0_section)
-                #     cv.waitKey(0)
+
                 return sector0_section
 
             case default:

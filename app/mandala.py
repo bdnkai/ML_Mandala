@@ -173,12 +173,12 @@ def mandala_node_state(app_name, action):
 
 
     orig_height, orig_width = img.shape[:2]
-    fixed_width = 500
+    fixed_width = 600
     ratio = fixed_width / float(orig_width)
     fixed_height = int(orig_height * ratio)
     img = cv.resize(img, (fixed_width, fixed_height))
 
-    print({f'{action_type}:  Oirignal H: {orig_height}, Original W:{orig_width}'})
+    print({f'{action_type}:  H,w: {orig_height}, {orig_width}'})
 
     # print(f'{action_type}: FH{fixed_height}, FW{fixed_width}')
     # if(action == 'split_node'):
