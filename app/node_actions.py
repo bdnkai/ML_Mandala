@@ -30,7 +30,7 @@ def dispatch_split_node(action_type, image):
                 return sector5_section
 
             case "invalid_stat_type":
-                s3_top, s3_left, s3_right, s3_bottom = 80, 10, 276, 100
+                s3_top, s3_left, s3_right, s3_bottom = 70, 10, 276, 95
                 sector6_section = image[s3_top:s3_bottom, s3_left:s3_right]
                 return sector6_section
 
@@ -53,10 +53,10 @@ def dispatch_split_node(action_type, image):
             case "success_chance":
                 s7_top, s7_left, s7_right, s7_bottom = 350, 10, 260, 375
                 sector0_section = image[s7_top:s7_bottom, s7_left:s7_right]
+                # while True:
+                #     cv.imshow('i', sector0_section)
+                #     cv.waitKey(0)
                 return sector0_section
 
             case default:
                 return "something"
-
-
-

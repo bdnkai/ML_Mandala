@@ -101,31 +101,64 @@ def get_window(app_name):
     # Get the window
     window = app.window(title=app_name)
 
+
     # Get the window's rectangle
     rect = window.rectangle()
+    if rect.width() != 1180:
+        window.move_window(x=-17, y=9, width=1180, height=614)
+    else:
+        pass
 
-    return rect
+    return app, window, rect
 
 
 def mandala_node_state(app_name, action):
     action_type = action
 
-
-
     if action_type == 'fetch_current_node_image':
-        rect = get_window(app_name=app_name)
-        width = rect.width()
-        height = rect.height()
+        app, window, rect = get_window(app_name=app_name)
 
-        print(f"Left: {rect.left}, Top: {rect.top}, Right: {rect.right}, Bottom: {rect.bottom}")
-        print(f"Width: {rect.width()}, Height: {rect.height()}")
+        # window.move_window(x=-17, y=9, width=1180, height=614)
 
-        sector_left, sector_top = (rect.width() - (rect.width() - 835)), (rect.height() - (rect.height() - 180))
-        sector_right, sector_bottom = (rect.width() - 40), (rect.height() - 10)
-        sector_region = (sector_left, sector_top, sector_right, sector_bottom)
+        app_width = rect.width()
+        app_height = rect.height()
+        app_left, app_top, app_right, app_bottom = rect.left,rect.top,rect.right, rect.bottom
+        print(f"Left: {app_left}, Top: {app_top}, Right: {app_right}, Bottom: {app_bottom}")
+        print(f"Width: {app_width}, Height: {app_height}")
+
+        successful_sec_left = 835
+        successful_sec_top = 180
+        successful_sec_right = 1140
+        successful_sec_bottom = 604
+        successful_sec_width = successful_sec_right - successful_sec_left
+        successful_sec_height = successful_sec_bottom - successful_sec_top
+
+        # sector_region = (sec_left, sec_top, sec_right, sec_bottom)
+
+        roi_left_ratio = (successful_sec_left - app_left) / app_width
+        roi_top_ratio = (successful_sec_top - app_top) / app_height
+        roi_width_ratio = successful_sec_width / app_width
+        roi_height_ratio = successful_sec_height / app_height
+
+        sec_left = int(app_width * roi_left_ratio) + app_left
+        sec_top = int(app_height * roi_top_ratio) + app_top
+        sec_right = sec_left + int(app_width * roi_width_ratio)
+        sec_bottom = sec_top + int(app_height * roi_height_ratio)
+
+        sector_region = (sec_left, sec_top, sec_right, sec_bottom)
+
+        print(roi_height_ratio,roi_width_ratio,roi_top_ratio,roi_top_ratio)
+
+
+        # sector_left, sector_top = (rect.width() - (rect.width() - 835)), (rect.height() - (rect.height() - 180))
+        # sector_right, sector_bottom = (rect.width() - 40), (rect.height() - 10)
+        # sector_region = (sector_left, sector_top, sector_right, sector_bottom)
+
+
+
         node_camera = camera.start(region=sector_region)
 
-        print(sector_region)
+        print(f'{sector_region}')
 
         image = camera.get_latest_frame()
 
@@ -140,13 +173,14 @@ def mandala_node_state(app_name, action):
 
 
     orig_height, orig_width = img.shape[:2]
-    fixed_width = 600
+    fixed_width = 500
     ratio = fixed_width / float(orig_width)
     fixed_height = int(orig_height * ratio)
     img = cv.resize(img, (fixed_width, fixed_height))
 
-    print({f'{action_type}:OH: {orig_height}, OW:{orig_width}'})
-    print(f'{action_type}: FH{fixed_height}, FW{fixed_width}')
+    print({f'{action_type}:  Oirignal H: {orig_height}, Original W:{orig_width}'})
+
+    # print(f'{action_type}: FH{fixed_height}, FW{fixed_width}')
     # if(action == 'split_node'):
     #     while True:
     #         cv.imshow('img', img)
