@@ -2,8 +2,11 @@
 import pyautogui
 import time
 import concurrent.futures
+
+import pywinauto.mouse
+
 from node_parser import parse_message
-from mandala import mandala_node_position, mandala_node_state, mandala_ring_state
+from mandala import mandala_node_position, mandala_node_state, mandala_ring_state, assign
 from node_actions import dispatch_split_node
 from dotenv import load_dotenv
 import os
@@ -16,21 +19,29 @@ def get_variable():
     e_locked = os.getenv("EL_PATH")
     a_unlocked = os.getenv("AU_PATH")
     e_unlocked = os.getenv("EU_PATH")
-    return application_name, a_unlocked, a_locked, e_unlocked, e_locked
+    plus = os.getenv("PLUS")
+    craft = os.getenv("CRAFT")
+
+    mandala = a_unlocked, a_locked, e_unlocked, e_locked
+    lazy =  plus, craft
+    return application_name, lazy
 
 
 
-def dispatch(mandala_action, img):
+def dispatch(mandala_action, img, match_img):
     def node_img_parser(roi, img):
         result = mandala_node_state(dispatch_split_node(roi, img), f'{roi}')
         return result
 
     match mandala_action:
-        case "assign_action":
-            print('taking action!..')
-            message = mandala_ring_state(img)
-            print(f'pressing action/ emhance')
-            return message
+        case "assign_img":
+            print('assigning image')
+            found_position = assign(img, match_img, threshold=0.7)
+            print(f'MATCHING FOUND ....')
+
+            if found_position:
+                pywinauto.mouse.click(found_position)
+            return found_position
 
         case "find_node_position":
             positions = mandala_node_position(img)
@@ -83,6 +94,7 @@ def dispatch(mandala_action, img):
                 for section in sections:
                     future = executor.submit(node_img_parser, roi=section, img=img)
                     futures[future] = section
+
             for f in concurrent.futures.as_completed(futures):
                 sec = futures[f]
                 sector_info[sec] = f.result()

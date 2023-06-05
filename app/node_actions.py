@@ -3,8 +3,6 @@ import cv2 as cv
 def dispatch_split_node(action_type, image):
         match action_type:
             case "title":
-
-
                 s1_top, s1_left, s1_right, s1_bottom = 0, 10, 245, 40
                 sector1_section = image[s1_top:s1_bottom, s1_left:s1_right]
                 return sector1_section
@@ -44,9 +42,6 @@ def dispatch_split_node(action_type, image):
             case "coin_price":
                 s5_top, s5_left, s5_right, s5_bottom = 325, 20, 260, 355
                 sector8_section = image[s5_top:s5_bottom, s5_left:s5_right]
-                # while True:
-                #     cv.imshow('i', sector8_section)
-                #     cv.waitKey(1)
                 return sector8_section
 
             case "orb_price":

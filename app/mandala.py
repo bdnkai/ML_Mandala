@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import re
 import dxcam
 import gym
+from vision import Vision
 from windowcapture import WindowCapture
 from hsv_filter import *
 from node_parser import parse_message
@@ -82,15 +83,33 @@ def mandala_node_position(img):
         return positions
 
 
-def assign(vision_image_file, name,  threshold):
+def assign(app_name, vision_image_file,  threshold):
+    app, window, rect = get_window(app_name=app_name)
+
+    # window.move_window(x=-17, y=9, width=1180, height=614)
+    app_width = rect.width()
+    app_height = rect.height()
+    app_left, app_top, app_right, app_bottom = rect.left, rect.top, rect.right, rect.bottom
+    app_region = app_left, app_top, app_right, app_bottom
+    print(f"Left: {app_left}, Top: {app_top}, Right: {app_right}, Bottom: {app_bottom}")
+    print(f"Width: {app_width}, Height: {app_height}")
+
+    node_camera = camera.start(region=app_region)
 
 
+    print(f'{app_region}')
+
+    print(vision_image_file)
+    image = camera.get_latest_frame()
     # sends adjusted img dimension to Vision Module
+    vision_image_file = cv.imread(vision_image_file, cv.THRESH_BINARY_INV)
     adjusted_vision_image = Vision(vision_image_file)
+
     image_data = adjusted_vision_image
 
     # returns the (x, y) location at which the image is found
-    tap_location = image_data.find( screenshot, threshold, 'points')
+    tap_location = image_data.find(vision_image_file, threshold, 'points')
+    print(tap_location)
 
 
 
@@ -101,11 +120,10 @@ def get_window(app_name):
     # Get the window
     window = app.window(title=app_name)
 
-
     # Get the window's rectangle
     rect = window.rectangle()
     if rect.width() != 1180:
-        window.move_window(x=-17, y=9, width=1180, height=614)
+        window.move_window(x=0, y=0, width=1180, height=614)
     else:
         pass
 
@@ -122,7 +140,7 @@ def mandala_node_state(app_name, action):
 
         app_width = rect.width()
         app_height = rect.height()
-        app_left, app_top, app_right, app_bottom = rect.left,rect.top,rect.right, rect.bottom
+        app_left, app_top, app_right, app_bottom = rect.left, rect.top, rect.right, rect.bottom
         print(f"Left: {app_left}, Top: {app_top}, Right: {app_right}, Bottom: {app_bottom}")
         print(f"Width: {app_width}, Height: {app_height}")
 
@@ -161,9 +179,11 @@ def mandala_node_state(app_name, action):
         print(f'{sector_region}')
 
         image = camera.get_latest_frame()
-
-        if camera.start:
-            camera.stop()
+        # while True:
+        #     cv.imshow('i', image)
+        #     cv.waitKey(1)
+        # if camera.start:
+        #     camera.stop()
 
         return image
 
@@ -178,8 +198,7 @@ def mandala_node_state(app_name, action):
     fixed_height = int(orig_height * ratio)
     img = cv.resize(img, (fixed_width, fixed_height))
 
-    print({f'{action_type}:  H,w: {orig_height}, {orig_width}'})
-
+    print({f'{action_type}:  {orig_height} {orig_width} {orig_width} {orig_height}'})
     # print(f'{action_type}: FH{fixed_height}, FW{fixed_width}')
     # if(action == 'split_node'):
     #     while True:
