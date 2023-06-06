@@ -87,29 +87,29 @@ def assign(app_name, vision_image_file,  threshold):
     app, window, rect = get_window(app_name=app_name)
 
     # window.move_window(x=-17, y=9, width=1180, height=614)
-    app_width = rect.width()
-    app_height = rect.height()
-    app_left, app_top, app_right, app_bottom = rect.left, rect.top, rect.right, rect.bottom
-    app_region = app_left, app_top, app_right, app_bottom
-    print(f"Left: {app_left}, Top: {app_top}, Right: {app_right}, Bottom: {app_bottom}")
-    print(f"Width: {app_width}, Height: {app_height}")
-
-    node_camera = camera.start(region=app_region)
-
-
-    print(f'{app_region}')
-
-    print(vision_image_file)
-    image = camera.get_latest_frame()
-    # sends adjusted img dimension to Vision Module
-    vision_image_file = cv.imread(vision_image_file, cv.THRESH_BINARY_INV)
-    adjusted_vision_image = Vision(vision_image_file)
-
-    image_data = adjusted_vision_image
-
-    # returns the (x, y) location at which the image is found
-    tap_location = image_data.find(vision_image_file, threshold, 'points')
-    print(tap_location)
+    # app_width = rect.width()
+    # app_height = rect.height()
+    # app_left, app_top, app_right, app_bottom = rect.left, rect.top, rect.right, rect.bottom
+    # app_region = app_left, app_top, app_right, app_bottom
+    # print(f"Left: {app_left}, Top: {app_top}, Right: {app_right}, Bottom: {app_bottom}")
+    # print(f"Width: {app_width}, Height: {app_height}")
+    #
+    # node_camera = camera.start(region=app_region)
+    #
+    #
+    # print(f'{app_region}')
+    #
+    # print(vision_image_file)
+    # image = camera.get_latest_frame()
+    # # sends adjusted img dimension to Vision Module
+    # vision_image_file = cv.imread(vision_image_file, cv.THRESH_BINARY_INV)
+    # adjusted_vision_image = Vision(vision_image_file)
+    #
+    # image_data = adjusted_vision_image
+    #
+    # # returns the (x, y) location at which the image is found
+    # tap_location = image_data.find(vision_image_file, threshold, 'points')
+    # print(tap_location)
 
 
 
