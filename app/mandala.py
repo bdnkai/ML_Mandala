@@ -4,42 +4,92 @@ import pytesseract
 import matplotlib.pyplot as plt
 import re
 import dxcam
-import gym
+
+from pywinauto import mouse
 from vision import Vision
 from windowcapture import WindowCapture
 from hsv_filter import *
 from node_parser import parse_message
+
 from pywinauto.application import Application
 
 
 
 
-
-class Action_State:
-    def __init__(self):
-        super(Action_State, self).__init__()
-
-        self.start = False
-
-        self.get_probability = False
-        self.get_sector_position = False
-        self.get_sector_info =False
-
-        self.proc_text = True if self.get_probability == True or self.get_sector_info == True else False
-        self.proc_nodes = True if self.get_sector_position == True else False
-
-        self.debug = False
-
-
-        self.proccessing = True if self.get_probability and self.get_sector_info and self.get_sector_position == True else False
-        self.ready = True if self.proccessing == False else True
-        self.probability_finished = False
-        self. sector_finished = False
-
-        self.end = True if self.probability_finished and self.get_sector_info == True else False
-
-
 camera = dxcam.create(output_idx=0, output_color="BGR")
+
+
+
+def get_window(app_name):
+    # Connect to the application
+    app = Application().connect(title=app_name)
+
+    # Get the window
+    window = app.window(title=app_name)
+    # Get the window's rectangle
+    # print(dir(window.child_window()))
+
+
+    rect = window.rectangle()
+    print(rect.width(), rect.height())
+    if rect.width() != 1435:
+        window.move_window(x=0, y=0, width=1435, height=755)
+    else:
+        pass
+
+    return app, window, rect
+
+
+def assign(app_name, vision_image_file,  threshold):
+    app, window, rect = get_window(app_name=app_name)
+
+    # Grab Size and Specs from targetted app
+    app_width = rect.width()
+    app_height = rect.height()
+    app_left, app_top, app_right, app_bottom = rect.left, rect.top, rect.right, rect.bottom
+
+    app_region = app_left, app_top, app_right, app_bottom
+
+    app_camera = camera.start(region=app_region)
+
+    print(f'{app_region}')
+
+    # Grab screen shot of last frame
+    screenshot = camera.get_latest_frame()
+    screenshot = cv.cvtColor(screenshot, cv.COLOR_BGR2GRAY)
+    screenshot = screenshot.astype('float32')
+
+    template = cv.imread(vision_image_file, 0)
+    template = template.astype('float32')
+
+
+
+    control = app.window(title=app_name).wrapper_object()
+
+    # Perform template matching
+
+    res = cv.matchTemplate(screenshot, template, cv.TM_CCOEFF_NORMED)
+    min_val, max_val, min_loc, max_loc = cv.minMaxLoc(res)
+
+    print(min_val, max_val, min_loc, max_loc)
+
+    print(threshold)
+
+    if max_val <= threshold:
+        return None
+
+    # Calculate the center of the matching image
+    center_x = max_loc[0] + template.shape[1] // 2
+    center_y = max_loc[1] + template.shape[0] // 2
+
+    # Click on the center of the image
+    # Move the mouse to the center of the image without physically moving the cursor
+
+
+    if camera.start:
+        camera.stop()
+    return center_x,center_y
+
 
 
 def mandala_node_position(img):
@@ -83,51 +133,8 @@ def mandala_node_position(img):
         return positions
 
 
-def assign(app_name, vision_image_file,  threshold):
-    app, window, rect = get_window(app_name=app_name)
-
-    # window.move_window(x=-17, y=9, width=1180, height=614)
-    # app_width = rect.width()
-    # app_height = rect.height()
-    # app_left, app_top, app_right, app_bottom = rect.left, rect.top, rect.right, rect.bottom
-    # app_region = app_left, app_top, app_right, app_bottom
-    # print(f"Left: {app_left}, Top: {app_top}, Right: {app_right}, Bottom: {app_bottom}")
-    # print(f"Width: {app_width}, Height: {app_height}")
-    #
-    # node_camera = camera.start(region=app_region)
-    #
-    #
-    # print(f'{app_region}')
-    #
-    # print(vision_image_file)
-    # image = camera.get_latest_frame()
-    # # sends adjusted img dimension to Vision Module
-    # vision_image_file = cv.imread(vision_image_file, cv.THRESH_BINARY_INV)
-    # adjusted_vision_image = Vision(vision_image_file)
-    #
-    # image_data = adjusted_vision_image
-    #
-    # # returns the (x, y) location at which the image is found
-    # tap_location = image_data.find(vision_image_file, threshold, 'points')
-    # print(tap_location)
 
 
-
-def get_window(app_name):
-    # Connect to the application
-    app = Application().connect(title=app_name)
-
-    # Get the window
-    window = app.window(title=app_name)
-
-    # Get the window's rectangle
-    rect = window.rectangle()
-    if rect.width() != 1180:
-        window.move_window(x=0, y=0, width=1180, height=614)
-    else:
-        pass
-
-    return app, window, rect
 
 
 def mandala_node_state(app_name, action):
@@ -135,8 +142,6 @@ def mandala_node_state(app_name, action):
 
     if action_type == 'fetch_current_node_image':
         app, window, rect = get_window(app_name=app_name)
-
-        # window.move_window(x=-17, y=9, width=1180, height=614)
 
         app_width = rect.width()
         app_height = rect.height()
@@ -150,8 +155,6 @@ def mandala_node_state(app_name, action):
         successful_sec_bottom = 604
         successful_sec_width = successful_sec_right - successful_sec_left
         successful_sec_height = successful_sec_bottom - successful_sec_top
-
-        # sector_region = (sec_left, sec_top, sec_right, sec_bottom)
 
         roi_left_ratio = (successful_sec_left - app_left) / app_width
         roi_top_ratio = (successful_sec_top - app_top) / app_height
@@ -168,29 +171,17 @@ def mandala_node_state(app_name, action):
         print(roi_height_ratio,roi_width_ratio,roi_top_ratio,roi_top_ratio)
 
 
-        # sector_left, sector_top = (rect.width() - (rect.width() - 835)), (rect.height() - (rect.height() - 180))
-        # sector_right, sector_bottom = (rect.width() - 40), (rect.height() - 10)
-        # sector_region = (sector_left, sector_top, sector_right, sector_bottom)
-
-
-
         node_camera = camera.start(region=sector_region)
 
         print(f'{sector_region}')
 
         image = camera.get_latest_frame()
-        # while True:
-        #     cv.imshow('i', image)
-        #     cv.waitKey(1)
-        # if camera.start:
-        #     camera.stop()
 
         return image
 
     if action_type == 'split_node' or action_type == 'fetch_current_node_status' or action_type != 'fetch_current_node_image':
         pass
         img = app_name
-
 
     orig_height, orig_width = img.shape[:2]
     fixed_width = 600
@@ -199,11 +190,7 @@ def mandala_node_state(app_name, action):
     img = cv.resize(img, (fixed_width, fixed_height))
 
     print({f'{action_type}:  {orig_height} {orig_width} {orig_width} {orig_height}'})
-    # print(f'{action_type}: FH{fixed_height}, FW{fixed_width}')
-    # if(action == 'split_node'):
-    #     while True:
-    #         cv.imshow('img', img)
-    #         cv.waitKey(1)
+
 
     hsv_filter = get_hsv_filter_from_controls('mandala_messages')
     filtered_img = apply_hsv_filter(img, hsv_filter=hsv_filter)

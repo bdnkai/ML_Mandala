@@ -21,39 +21,71 @@ def get_variable():
     e_unlocked = os.getenv("EU_PATH")
     plus = os.getenv("PLUS")
     craft = os.getenv("CRAFT")
+    okay_button = os.getenv('OKAY')
+    okay2_button = os.getenv('OKAY2')
 
     mandala = a_unlocked, a_locked, e_unlocked, e_locked
-    lazy =  plus, craft
+    lazy = plus, craft, okay_button, okay2_button
+
     return application_name, lazy
 
 
+def dispatch_craft(mandala_action, app_name, match_img, threshold):
+    match mandala_action:
+        case "vision":
 
-def dispatch(mandala_action, img, match_img):
+            vision_position = assign(app_name, match_img, threshold=threshold)
+
+            if vision_position:
+                print('found position for  + sign')
+
+                for press in range(10):
+                    pyautogui.click(vision_position, duration=0.01)
+                print('done')
+
+            return 'done'
+
+        case "press_once":
+
+            vision_position = assign(app_name, match_img, threshold=threshold)
+
+            if vision_position:
+                print('found position for 1 action')
+
+                pyautogui.click(vision_position, duration=0.01)
+                print('done')
+            return 'done'
+
+        case "press_once_wait":
+            time.sleep(4)
+            vision_position = assign(app_name, match_img, threshold=threshold)
+
+            if vision_position:
+                print('found position for 1 action')
+
+                pyautogui.click(vision_position, duration=0.01)
+                print('done')
+            return
+
+        case default:
+            return None
+
+
+def dispatch(mandala_action, img):
     def node_img_parser(roi, img):
         result = mandala_node_state(dispatch_split_node(roi, img), f'{roi}')
         return result
 
     match mandala_action:
-        case "assign_img":
-            print('assigning image')
-            found_position = assign(img, match_img, threshold=0.7)
-            print(f'MATCHING FOUND ....')
-
-            if found_position:
-                pywinauto.mouse.click(found_position)
-            return found_position
-
         case "find_node_position":
             positions = mandala_node_position(img)
-            print(f'finished, sector position is {positions}')
+            print(f'finished, sector position is {positions[0]}')
             return positions
 
         case "select_node_position":
             positions = img
             print(f'Clicking Sector... {positions[0]}')
-            time.sleep(1)
-            pyautogui.click(positions[0])
-            time.sleep(1)
+            pyautogui.click(positions, duration=0.01)
             return
 
         case "get_ring_information":
