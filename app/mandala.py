@@ -4,38 +4,92 @@ import pytesseract
 import matplotlib.pyplot as plt
 import re
 import dxcam
-import gym
+
+from pywinauto import mouse
+from vision import Vision
 from windowcapture import WindowCapture
 from hsv_filter import *
 from node_parser import parse_message
 
+from pywinauto.application import Application
 
 
-class Action_State:
-    def __init__(self):
-        super(Action_State, self).__init__()
-
-        self.start = False
-
-        self.get_probability = False
-        self.get_sector_position = False
-        self.get_sector_info =False
-
-        self.proc_text = True if self.get_probability == True or self.get_sector_info == True else False
-        self.proc_nodes = True if self.get_sector_position == True else False
-
-        self.debug = False
-
-
-        self.proccessing = True if self.get_probability and self.get_sector_info and self.get_sector_position == True else False
-        self.ready = True if self.proccessing == False else True
-        self.probability_finished = False
-        self. sector_finished = False
-
-        self.end = True if self.probability_finished and self.get_sector_info == True else False
 
 
 camera = dxcam.create(output_idx=0, output_color="BGR")
+
+
+
+def get_window(app_name):
+    # Connect to the application
+    app = Application().connect(title=app_name)
+
+    # Get the window
+    window = app.window(title=app_name)
+    # Get the window's rectangle
+    # print(dir(window.child_window()))
+
+
+    rect = window.rectangle()
+    print(rect.width(), rect.height())
+    if rect.width() != 1435:
+        window.move_window(x=0, y=0, width=1435, height=755)
+    else:
+        pass
+
+    return app, window, rect
+
+
+def assign(app_name, vision_image_file,  threshold):
+    app, window, rect = get_window(app_name=app_name)
+
+    # Grab Size and Specs from targetted app
+    app_width = rect.width()
+    app_height = rect.height()
+    app_left, app_top, app_right, app_bottom = rect.left, rect.top, rect.right, rect.bottom
+
+    app_region = app_left, app_top, app_right, app_bottom
+
+    app_camera = camera.start(region=app_region)
+
+    print(f'{app_region}')
+
+    # Grab screen shot of last frame
+    screenshot = camera.get_latest_frame()
+    screenshot = cv.cvtColor(screenshot, cv.COLOR_BGR2GRAY)
+    screenshot = screenshot.astype('float32')
+
+    template = cv.imread(vision_image_file, 0)
+    template = template.astype('float32')
+
+
+
+    control = app.window(title=app_name).wrapper_object()
+
+    # Perform template matching
+
+    res = cv.matchTemplate(screenshot, template, cv.TM_CCOEFF_NORMED)
+    min_val, max_val, min_loc, max_loc = cv.minMaxLoc(res)
+
+    print(min_val, max_val, min_loc, max_loc)
+
+    print(threshold)
+
+    if max_val <= threshold:
+        return None
+
+    # Calculate the center of the matching image
+    center_x = max_loc[0] + template.shape[1] // 2
+    center_y = max_loc[1] + template.shape[0] // 2
+
+    # Click on the center of the image
+    # Move the mouse to the center of the image without physically moving the cursor
+
+
+    if camera.start:
+        camera.stop()
+    return center_x,center_y
+
 
 
 def mandala_node_position(img):
@@ -79,66 +133,85 @@ def mandala_node_position(img):
         return positions
 
 
-def assign(vision_image_file, name,  threshold):
-    # sends adjusted img dimension to Vision Module
-        adjusted_vision_image = Vision(vision_image_file)
-        image_data = adjusted_vision_image
-
-    # returns the (x, y) location at which the image is found
-        tap_location = image_data.find( screenshot, threshold, 'points')
-
-        if tap_location is not None:
-                tap(device, tap_location)
 
 
 
 
-def mandala_node_state(img, action):
+def mandala_node_state(app_name, action):
     action_type = action
 
-    if action_type != 'node_actions':
-        wincap = WindowCapture(img)
-        sector_left, sector_top = (wincap.w - (wincap.w - 835)), (wincap.h - (wincap.h - 180))
-        sector_right, sector_bottom = (wincap.w - 40), (wincap.h - 10)
-        sector_region = (sector_left, sector_top, sector_right, sector_bottom)
+    if action_type == 'fetch_current_node_image':
+        app, window, rect = get_window(app_name=app_name)
+
+        app_width = rect.width()
+        app_height = rect.height()
+        app_left, app_top, app_right, app_bottom = rect.left, rect.top, rect.right, rect.bottom
+        print(f"Left: {app_left}, Top: {app_top}, Right: {app_right}, Bottom: {app_bottom}")
+        print(f"Width: {app_width}, Height: {app_height}")
+
+        successful_sec_left = 835
+        successful_sec_top = 180
+        successful_sec_right = 1140
+        successful_sec_bottom = 604
+        successful_sec_width = successful_sec_right - successful_sec_left
+        successful_sec_height = successful_sec_bottom - successful_sec_top
+
+        roi_left_ratio = (successful_sec_left - app_left) / app_width
+        roi_top_ratio = (successful_sec_top - app_top) / app_height
+        roi_width_ratio = successful_sec_width / app_width
+        roi_height_ratio = successful_sec_height / app_height
+
+        sec_left = int(app_width * roi_left_ratio) + app_left
+        sec_top = int(app_height * roi_top_ratio) + app_top
+        sec_right = sec_left + int(app_width * roi_width_ratio)
+        sec_bottom = sec_top + int(app_height * roi_height_ratio)
+
+        sector_region = (sec_left, sec_top, sec_right, sec_bottom)
+
+        print(roi_height_ratio,roi_width_ratio,roi_top_ratio,roi_top_ratio)
+
+
         node_camera = camera.start(region=sector_region)
+
+        print(f'{sector_region}')
+
         image = camera.get_latest_frame()
 
-    if action_type == 'fetch_current_node_image':
-        camera.stop()
         return image
 
-    if action_type == 'node_actions':
+    if action_type == 'split_node' or action_type == 'fetch_current_node_status' or action_type != 'fetch_current_node_image':
         pass
-        image = img
+        img = app_name
 
-    img = image
     orig_height, orig_width = img.shape[:2]
-    fixed_width = 700
+    fixed_width = 600
     ratio = fixed_width / float(orig_width)
     fixed_height = int(orig_height * ratio)
     img = cv.resize(img, (fixed_width, fixed_height))
+
+    print({f'{action_type}:  {orig_height} {orig_width} {orig_width} {orig_height}'})
+
 
     hsv_filter = get_hsv_filter_from_controls('mandala_messages')
     filtered_img = apply_hsv_filter(img, hsv_filter=hsv_filter)
 
     gray = cv.cvtColor(filtered_img, cv.COLOR_BGR2GRAY)
     thresh = cv.threshold(gray, 0, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)[1]
-
-
     config = '-c char_whitelist= --oem 3 --psm 4'
     text_right_box = pytesseract.image_to_string(gray, lang='eng', config=config)
     if text_right_box:
-        text = re.sub('[^A-Za-z0-9-,%]+', ' ', text_right_box).lower()
+        text = re.sub('[^A-Za-z0-9-.,%]+', ' ', text_right_box).lower()
         lines = text.split('\n')
         for line in lines:
             if lines and ' ' in lines[0]:
                 for line in lines:
                     os_read = f'{line}'
-                camera.stop()
+                if camera.start:
+                    camera.stop()
+
                 return os_read
 
-    if camera.is_capturing:
+    if camera.start:
         camera.stop()
 
 
@@ -174,12 +247,14 @@ def mandala_ring_state(img):
                 for line in lines:
                     os_read = f'{line}'
                     return os_read
-                camera.stop()
+                if camera.start:
+                    camera.stop()
+
                 return os_read
 
-
-if camera.is_capturing:
+if camera.start:
     camera.stop()
+
 
 
 

@@ -2,35 +2,90 @@
 import pyautogui
 import time
 import concurrent.futures
-from node_parser import parse_message
-from mandala import mandala_node_position, mandala_node_state, mandala_ring_state
-from node_actions import dispatch_node
 
-game_name = 'MIRMG(1)'
+import pywinauto.mouse
+
+from node_parser import parse_message
+from mandala import mandala_node_position, mandala_node_state, mandala_ring_state, assign
+from node_actions import dispatch_split_node
+from dotenv import load_dotenv
+import os
+
+
+load_dotenv('../.env')
+def get_variable():
+    application_name = os.getenv("APP_NAME")
+    a_locked = os.getenv("AL_PATH")
+    e_locked = os.getenv("EL_PATH")
+    a_unlocked = os.getenv("AU_PATH")
+    e_unlocked = os.getenv("EU_PATH")
+    plus = os.getenv("PLUS")
+    craft = os.getenv("CRAFT")
+    okay_button = os.getenv('OKAY')
+    okay2_button = os.getenv('OKAY2')
+
+    mandala = a_unlocked, a_locked, e_unlocked, e_locked
+    lazy = plus, craft, okay_button, okay2_button
+
+    return application_name, lazy
+
+
+def dispatch_craft(mandala_action, app_name, match_img, threshold):
+    match mandala_action:
+        case "vision":
+
+            vision_position = assign(app_name, match_img, threshold=threshold)
+
+            if vision_position:
+                print('found position for  + sign')
+
+                for press in range(10):
+                    pyautogui.click(vision_position, duration=0.01)
+                print('done')
+
+            return 'done'
+
+        case "press_once":
+
+            vision_position = assign(app_name, match_img, threshold=threshold)
+
+            if vision_position:
+                print('found position for 1 action')
+
+                pyautogui.click(vision_position, duration=0.01)
+                print('done')
+            return 'done'
+
+        case "press_once_wait":
+            time.sleep(4)
+            vision_position = assign(app_name, match_img, threshold=threshold)
+
+            if vision_position:
+                print('found position for 1 action')
+
+                pyautogui.click(vision_position, duration=0.01)
+                print('done')
+            return
+
+        case default:
+            return None
+
 
 def dispatch(mandala_action, img):
     def node_img_parser(roi, img):
-        result = mandala_node_state(dispatch_node(roi, img), 'node_actions')
+        result = mandala_node_state(dispatch_split_node(roi, img), f'{roi}')
         return result
 
     match mandala_action:
-        case "assign_action":
-            print('taking action!..')
-            message = mandala_ring_state(img)
-            print(f'pressing action/ emhance')
-            return message
-
         case "find_node_position":
             positions = mandala_node_position(img)
-            print(f'finished, sector position is {positions}')
+            print(f'finished, sector position is {positions[0]}')
             return positions
 
         case "select_node_position":
             positions = img
             print(f'Clicking Sector... {positions[0]}')
-            time.sleep(1)
-            pyautogui.click(positions[0])
-            time.sleep(1)
+            pyautogui.click(positions, duration=0.01)
             return
 
         case "get_ring_information":
@@ -41,7 +96,7 @@ def dispatch(mandala_action, img):
 
         case "get_node_information":
             node_status, node_image = dispatch('node_status', img)
-            sector_node = dispatch('sector_unlocked', node_image) if node_status == True else dispatch('sector_locked', node_image) if node_status == False else ''
+            sector_node = dispatch('sector_unlocked', node_image) if node_status == True else dispatch('sector_locked', node_image) if node_status == False else print('SOMETHINGS WRONG')
             return sector_node
 
         case "sector_unlocked":
@@ -75,12 +130,14 @@ def dispatch(mandala_action, img):
             for f in concurrent.futures.as_completed(futures):
                 sec = futures[f]
                 sector_info[sec] = f.result()
+                print(sector_info[sec])
             parsed_message = parse_message(sector_info, 'locked')
+
             return parsed_message
 
         case "node_status":
             node_image = mandala_node_state(img, 'fetch_current_node_image')
-            status = mandala_node_state(img, 'fetch_current_node_status')
+            status = mandala_node_state(node_image, 'fetch_current_node_status')
 
             if "previous mandala has not been activated yet" in status:
                 return False, node_image
