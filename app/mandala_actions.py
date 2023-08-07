@@ -2,32 +2,12 @@
 import pyautogui
 import time
 import concurrent.futures
-
-import pywinauto.mouse
-
 from node_parser import parse_message
 from mandala import mandala_node_position, mandala_node_state, mandala_ring_state, assign
 from node_actions import dispatch_split_node
-from dotenv import load_dotenv
-import os
 
 
-load_dotenv('../.env')
-def get_variable():
-    application_name = os.getenv("APP_NAME")
-    a_locked = os.getenv("AL_PATH")
-    e_locked = os.getenv("EL_PATH")
-    a_unlocked = os.getenv("AU_PATH")
-    e_unlocked = os.getenv("EU_PATH")
-    plus = os.getenv("PLUS")
-    craft = os.getenv("CRAFT")
-    okay_button = os.getenv('OKAY')
-    okay2_button = os.getenv('OKAY2')
 
-    mandala = a_unlocked, a_locked, e_unlocked, e_locked
-    lazy = plus, craft, okay_button, okay2_button
-
-    return application_name, lazy
 
 
 def dispatch_craft(mandala_action, app_name, match_img, threshold):
@@ -69,6 +49,48 @@ def dispatch_craft(mandala_action, app_name, match_img, threshold):
 
         case default:
             return None
+
+
+def dispatch_norm(mandala_action, app_name, match_img, threshold):
+    match mandala_action:
+        case "vision":
+
+            vision_position = assign(app_name, match_img, threshold=threshold)
+
+            if vision_position:
+                print('found position for item sign')
+
+                pyautogui.click(vision_position, duration=0.01)
+                print('done')
+
+            return 'done'
+
+        case "press_once":
+
+            vision_position = assign(app_name, match_img, threshold=threshold)
+
+            if vision_position:
+                print('found position for 1 action')
+
+                pyautogui.click(vision_position, duration=0.01)
+                print('done')
+            return 'done'
+
+        case "press_once_wait":
+            time.sleep(4)
+            vision_position = assign(app_name, match_img, threshold=threshold)
+
+            if vision_position:
+                print('found position for 1 action')
+
+                pyautogui.click(vision_position, duration=0.01)
+                print('done')
+            return
+
+        case default:
+            return None
+
+
 
 
 def dispatch(mandala_action, img):
